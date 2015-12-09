@@ -1,0 +1,24 @@
+{
+  "name": "redux-electron-store",
+  "version": "0.0.1",
+  "description": "A redux store that handles synchronizing its data between Electron processes",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/samiskin/redux-electron-store.git"
+  },
+  "keywords": [
+    "redux",
+    "electron",
+    "atom"
+  ],
+  "author": "Shiranka Miskin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/samiskin/redux-electron-store/issues"
+  },
+  "homepage": "https://github.com/samiskin/redux-electron-store#readme"
+}
