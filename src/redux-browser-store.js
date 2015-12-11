@@ -1,5 +1,6 @@
 const ipcMain = require('electron').ipcMain;
 
+import fillShape from './utils/fill-shape';
 import objectDifference from './utils/object-difference.js';
 import ReduxElectronStore from './redux-electron-store';
 
@@ -29,10 +30,13 @@ export default class ReduxBrowserStore extends ReduxElectronStore {
 
     let stateDifference = objectDifference(prevState, newState);
 
-    let payload = {type: action.type, data: stateDifference};
-
     for (let winId in this.windows) {
-      if (this.filters[winId](prevState, newState)) {
+      let shape = this.filters[winId];
+      let updated = fillShape(stateDifference.updated, shape);
+      let deleted = fillShape(stateDifference.deleted, shape);
+
+      if (!_.isEmpty(updated) || !_.isEmpty(deleted)) {
+        let payload = _.assign({}, action, { data: {updated, deleted} });
         this.windows[winId].webContents.send('browser-dispatch', payload);
       }
     }

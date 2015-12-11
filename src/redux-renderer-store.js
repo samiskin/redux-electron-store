@@ -15,8 +15,30 @@ export default class ReduxRendererStore extends ReduxElectronStore {
     });
   }
 
+
+
   parseReducer(reducer) {
     return (state, action) => {
+      let filteredState = filterObject(state, action.data.deleted);
+      return objectMerge(filteredState, action.data.updated);
+    }
+  }
+
+  dispatch(action) {
+    action.source = `renderer ${this.windowId}`;
+    ipcRenderer.send('renderer-dispatch', action);
+  }
+}
+
+class ReduxRendererSyncStore extends ReduxRendererStore() {
+
+  dispatch(action) {
+    action.source = `renderer ${this.windowId}`;
+    this.dispatch(action);
+  }
+
+  parseReducer(reducer) {
+    return (state, action) {
       if (action.source === 'browser') {
         let filteredState = filterObject(state, action.data.deleted);
         return objectMerge(filteredState, action.data.updated);
@@ -26,8 +48,4 @@ export default class ReduxRendererStore extends ReduxElectronStore {
     }
   }
 
-  dispatch(action) {
-    action.source = `renderer ${this.windowId}`;
-    ipcRenderer.send('renderer-dispatch', action);
-  }
 }
