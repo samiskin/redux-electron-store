@@ -1,3 +1,2 @@
-require('babel-register');
-const store = require('./redux-electron-store.js');
-module.exports = store;
+const store = process.type === 'browser' ? require('./redux-browser-store').default : require('./redux-renderer-store').default;
+export default store;

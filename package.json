@@ -5,7 +5,7 @@
   "main": "lib/index.js",
   "scripts": {
     "compile": "babel -d lib/ src/",
-    "watch": "babel -d lib/ src/ --watch",
+    "watch": "babel -d lib/ src/ --watch --sourceMaps=true",
     "prepublish": "npm run compile"
   },
   "repository": {
@@ -25,6 +25,7 @@
   "homepage": "https://github.com/samiskin/redux-electron-store#readme",
   "dependencies": {
     "babel-register": "^6.3.13",
+    "lodash": "^3.10.1",
     "redux": "^3.0.4"
   },
   "devDependencies": {

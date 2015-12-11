@@ -1,7 +1,12 @@
 export default class ReduxElectronStore {
 
-  constructor(reduxStore) {
-    this.reduxStore = reduxStore;
+  constructor(reduxStoreCreator, reducer) {
+    this.type = process.type; // browser or renderer
+    this.reduxStore = reduxStoreCreator(this.parseReducer(reducer));
+  }
+
+  parseReducer(reducer) {
+    return reducer;
   }
 
   getReduxStore() {
@@ -21,7 +26,8 @@ export default class ReduxElectronStore {
   }
 
   replaceReducer(nextReducer) {
-    return this.reduxStore.nextReducer(nextReducer);
+    return this.reduxStore.nextReducer(this.parseReducer(nextReducer));
   }
 
 }
+
