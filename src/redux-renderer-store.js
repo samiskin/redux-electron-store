@@ -15,13 +15,12 @@ export default class ReduxRendererStore extends ReduxElectronStore {
     });
   }
 
-
-
   parseReducer(reducer) {
     return (state, action) => {
+      if (action.type === '@@INIT') return reducer(state, action);
       let filteredState = filterObject(state, action.data.deleted);
       return objectMerge(filteredState, action.data.updated);
-    }
+    };
   }
 
   dispatch(action) {
@@ -30,22 +29,29 @@ export default class ReduxRendererStore extends ReduxElectronStore {
   }
 }
 
-class ReduxRendererSyncStore extends ReduxRendererStore() {
+class ReduxRendererSyncStore extends ReduxRendererStore {
 
   dispatch(action) {
     action.source = `renderer ${this.windowId}`;
-    this.dispatch(action);
+    super.dispatch(action);
   }
 
   parseReducer(reducer) {
-    return (state, action) {
+    return (state, action) => {
       if (action.source === 'browser') {
         let filteredState = filterObject(state, action.data.deleted);
         return objectMerge(filteredState, action.data.updated);
-      } else {
-        return reducer(state, action);
       }
-    }
+      return reducer(state, action);
+    };
   }
 
 }
+
+
+export default ReduxRendererStore;
+
+export {
+  ReduxRendererStore,
+  ReduxRendererSyncStore
+};
