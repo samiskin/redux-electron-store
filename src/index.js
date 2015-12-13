@@ -1,2 +1,9 @@
-const store = process.type === 'browser' ? require('./redux-browser-store').default : require('./redux-renderer-store').default;
-export default store;
+import ReduxBrowserStore from './redux-browser-store';
+import { ReduxRendererStore, ReduxRendererSyncStore } from './redux-renderer-store';
+
+export {
+  ReduxBrowserStore,
+  ReduxRendererStore,
+  ReduxRendererSyncStore
+};
+

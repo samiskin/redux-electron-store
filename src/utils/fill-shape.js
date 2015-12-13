@@ -25,9 +25,17 @@ Will return:
 }
 */
 
+function isEmpty(variable) {
+  return variable === null
+    || variable === undefined
+    || (typeof variable === 'object'
+        && !Array.isArray(variable)
+        && Object.keys(variable).length === 0);
+}
+
 export default function fillShape(source, sink) {
   if (typeof sink === 'function') {
-   sink = sink(source);
+    sink = sink(source);
   }
 
   if (sink === true) {
@@ -41,9 +49,12 @@ export default function fillShape(source, sink) {
     } else if (typeof sink[key] === 'object'
       || typeof sink[key] === 'function'
       || sink[key] === true) {
-      filledObject[key] = fillShape(source[key], sink[key]);
+      let filledChildren = fillShape(source[key], sink[key]);
+      if (!isEmpty(filledChildren)) {
+        filledObject[key] = filledChildren;
+      }
     } else {
-      throw new Error("Values in the sink must be another object, function, or `true`");
+      throw new Error('Values in the sink must be another object, function, or `true`');
     }
   });
   return filledObject;

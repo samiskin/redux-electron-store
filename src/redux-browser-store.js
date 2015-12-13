@@ -1,5 +1,6 @@
 const ipcMain = require('electron').ipcMain;
 
+import _ from 'lodash';
 import fillShape from './utils/fill-shape';
 import objectDifference from './utils/object-difference.js';
 import ReduxElectronStore from './redux-electron-store';
@@ -7,7 +8,9 @@ import ReduxElectronStore from './redux-electron-store';
 export default class ReduxBrowserStore extends ReduxElectronStore {
 
   constructor(reduxStoreCreator, reducer) {
-    super(reduxStoreCreator, reducer);
+    super();
+    this.reduxStore = reduxStoreCreator(this.parseReducer(reducer));
+
     this.windows = {};
     this.filters = {};
 

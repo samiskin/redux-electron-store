@@ -6,9 +6,12 @@ import ReduxElectronStore from './redux-electron-store';
 
 export default class ReduxRendererStore extends ReduxElectronStore {
 
-  constructor(reduxStoreCreator, reducer) {
-    super(reduxStoreCreator, reducer);
+  constructor(reduxStoreCreator, reducer, preload) {
+    super();
+
     this.windowId = require('remote').getCurrentWindow().id;
+    this.preload = preload;
+    this.reduxStore = reduxStoreCreator(this.parseReducer(reducer));
 
     ipcRenderer.on('browser-dispatch', (event, action) => {
       this.reduxStore.dispatch(action);
@@ -17,7 +20,8 @@ export default class ReduxRendererStore extends ReduxElectronStore {
 
   parseReducer(reducer) {
     return (state, action) => {
-      if (action.type === '@@INIT') return reducer(state, action);
+      if (action.type === '@@INIT') return this.preload;
+
       let filteredState = filterObject(state, action.data.deleted);
       return objectMerge(filteredState, action.data.updated);
     };
@@ -38,6 +42,7 @@ class ReduxRendererSyncStore extends ReduxRendererStore {
 
   parseReducer(reducer) {
     return (state, action) => {
+      if (action.type === '@@INIT') return this.preload;
       if (action.source === 'browser') {
         let filteredState = filterObject(state, action.data.deleted);
         return objectMerge(filteredState, action.data.updated);
@@ -47,9 +52,6 @@ class ReduxRendererSyncStore extends ReduxRendererStore {
   }
 
 }
-
-
-export default ReduxRendererStore;
 
 export {
   ReduxRendererStore,
