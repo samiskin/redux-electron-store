@@ -25,13 +25,7 @@ Will return:
 }
 */
 
-function isEmpty(variable) {
-  return variable === null
-    || variable === undefined
-    || (typeof variable === 'object'
-        && !Array.isArray(variable)
-        && Object.keys(variable).length === 0);
-}
+import { isEmpty } from './lodash-clones';
 
 export default function fillShape(source, sink) {
   if (typeof sink === 'function') {

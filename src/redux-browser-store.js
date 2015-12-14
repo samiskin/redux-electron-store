@@ -1,6 +1,6 @@
 const ipcMain = require('electron').ipcMain;
 
-import _ from 'lodash';
+import { isEmpty } from './utils/lodash-clones';
 import fillShape from './utils/fill-shape';
 import objectDifference from './utils/object-difference.js';
 import ReduxElectronStore from './redux-electron-store';
@@ -24,6 +24,11 @@ export default class ReduxBrowserStore extends ReduxElectronStore {
     this.filters[browserWindow.id] = filter;
   }
 
+  unregisterWindow(winId) {
+    delete this.windows[winId];
+    delete this.filters[winId];
+  }
+
   dispatch(action) {
 
     action.source = action.source || 'browser';
@@ -38,8 +43,8 @@ export default class ReduxBrowserStore extends ReduxElectronStore {
       let updated = fillShape(stateDifference.updated, shape);
       let deleted = fillShape(stateDifference.deleted, shape);
 
-      if (!_.isEmpty(updated) || !_.isEmpty(deleted)) {
-        let payload = _.assign({}, action, { data: {updated, deleted} });
+      if (!isEmpty(updated) || !isEmpty(deleted)) {
+        let payload = Object.assign({}, action, { data: {updated, deleted} });
         this.windows[winId].webContents.send('browser-dispatch', payload);
       }
     }

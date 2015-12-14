@@ -1,4 +1,3 @@
-import _ from 'lodash';
 /*
   Takes the old and the new version of an immutable object and
   returns a hash of what has updated (added or changed) in the object
@@ -9,12 +8,14 @@ import _ from 'lodash';
     {updated: {b: 2}, deleted: {a: true}}
 */
 
+import { isEmpty, isObject } from './lodash-clones';
+
 export default function objectDifference(oldValue, newValue) {
 
   let updated = {};
   let deleted = {};
 
-  _.keys(newValue).forEach((key) => {
+  Object.keys(newValue).forEach((key) => {
     if (oldValue[key] === newValue[key]) return;
 
     // If there is a difference in the variables, check if they are an actual
@@ -22,18 +23,18 @@ export default function objectDifference(oldValue, newValue) {
     // are an object, check for differences in the objects and update our
     // diffs if there is anything there.  If it isn't an object, then it is either
     // a changed value or a new value, therefore add it to the updated object
-    if (_.isObject(oldValue[key]) && _.isObject(newValue[key]) &&
+    if (isObject(oldValue[key]) && isObject(newValue[key]) &&
       !Array.isArray(oldValue[key]) && !Array.isArray(newValue[key])) {
       let deep = objectDifference(oldValue[key], newValue[key]);
-      if (!_.isEmpty(deep.updated)) updated[key] = deep.updated;
-      if (!_.isEmpty(deep.deleted)) deleted[key] = deep.deleted;
+      if (!isEmpty(deep.updated)) updated[key] = deep.updated;
+      if (!isEmpty(deep.deleted)) deleted[key] = deep.deleted;
     } else {
       updated[key] = newValue[key];
     }
   });
 
   // Any keys in the old object that aren't in the new one must have been deleted
-  _.keys(oldValue).forEach((key) => {
+  Object.keys(oldValue).forEach((key) => {
     if (newValue[key] !== undefined) return;
     deleted[key] = true;
   });

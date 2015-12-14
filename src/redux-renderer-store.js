@@ -1,16 +1,23 @@
 const ipcRenderer = require('electron').ipcRenderer;
 import filterObject from './utils/filter-object';
 import objectMerge from './utils/object-merge';
+import fillShape from './utils/fill-shape';
+import cloneDeep from 'lodash.cloneDeep';
 
 import ReduxElectronStore from './redux-electron-store';
 
 export default class ReduxRendererStore extends ReduxElectronStore {
 
-  constructor(reduxStoreCreator, reducer, preload) {
+  constructor(reduxStoreCreator, reducer) {
     super();
 
-    this.windowId = require('remote').getCurrentWindow().id;
-    this.preload = preload;
+    let remote = require('remote');
+    this.windowId = remote.getCurrentWindow().id;
+    let browserStore = remote.getGlobal(this.globalName);
+    this.filter = browserStore.filters[this.windowId];
+
+    // The object returned here is out of our control and may be mutated
+    this.preload = cloneDeep(fillShape(browserStore.reduxStore.getState(), this.filter));
     this.reduxStore = reduxStoreCreator(this.parseReducer(reducer));
 
     ipcRenderer.on('browser-dispatch', (event, action) => {
@@ -43,10 +50,12 @@ class ReduxRendererSyncStore extends ReduxRendererStore {
   parseReducer(reducer) {
     return (state, action) => {
       if (action.type === '@@INIT') return this.preload;
+
       if (action.source === 'browser') {
         let filteredState = filterObject(state, action.data.deleted);
         return objectMerge(filteredState, action.data.updated);
       }
+
       return reducer(state, action);
     };
   }

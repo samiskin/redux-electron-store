@@ -1,5 +1,4 @@
-import _ from 'lodash';
-
+import { isObject } from './lodash-clones';
 // Given an source object and a filter shape, remove all leaf elements in the shape
 // from the source.  Example:
 // filterObject({'a': 1, 'b':{'c': {}}}, {'b': {'c': true}})
@@ -10,7 +9,7 @@ export default function filterObject(source, filter) {
   if (!source || filter === true) return {};
   let filtered = {};
   Object.keys(source).forEach((key) => {
-    if (_.isObject(filter[key])) {
+    if (isObject(filter[key])) {
       filtered[key] = filterObject(source[key], filter[key]);
     } else if (filter[key] && filter[key] !== true) {
       throw new Error(`Values in the filter must either be another object or 'true' \n Filter given: ${JSON.stringify(filter)}`);
