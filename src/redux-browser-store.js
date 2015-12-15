@@ -18,22 +18,22 @@ export default class ReduxBrowserStore extends ReduxElectronStore {
     super();
     this.reduxStore = createReduxStore(this._parseReducer(reducer));
 
-    this.windows = {};
-    this.filters = {};
+    this.windows = {}; // windowId -> webContents
+    this.filters = {}; // windowId -> Object/function/true
 
-    ipcMain.on('renderer-dispatch', (event, action) => {
+    ipcMain.on(`${this.globalName}-renderer-dispatch`, (event, action) => {
       this.dispatch(action);
+    });
+
+    ipcMain.on(`${this.globalName}-register-renderer`, ({sender}, {windowId, filter}) => {
+      this.windows[windowId] = sender;
+      this.filters[windowId] = filter;
     });
   }
 
-  registerWindow(browserWindow, filter = () => true) {
-    this.windows[browserWindow.id] = browserWindow;
-    this.filters[browserWindow.id] = filter;
-  }
-
-  unregisterWindow(winId) {
-    delete this.windows[winId];
-    delete this.filters[winId];
+  unregisterWindow(windowId) {
+    delete this.windows[windowId];
+    delete this.filters[windowId];
   }
 
   dispatch(action) {
@@ -44,14 +44,14 @@ export default class ReduxBrowserStore extends ReduxElectronStore {
 
     let stateDifference = objectDifference(prevState, newState);
 
-    for (let winId in this.windows) {
-      let shape = this.filters[winId];
+    for (let windowId in this.windows) {
+      let shape = this.filters[windowId];
       let updated = fillShape(stateDifference.updated, shape);
       let deleted = fillShape(stateDifference.deleted, shape);
 
       if (!isEmpty(updated) || !isEmpty(deleted)) {
         let payload = Object.assign({}, action, { data: {updated, deleted} });
-        this.windows[winId].webContents.send('browser-dispatch', payload);
+        this.windows[windowId].send(`${this.globalName}-browser-dispatch`, payload);
       }
     }
   }

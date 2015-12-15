@@ -14,19 +14,28 @@ import ReduxElectronStore from './redux-electron-store';
  */
 export default class ReduxRendererStore extends ReduxElectronStore {
 
-  constructor({createReduxStore, reducer}) {
+  constructor({createReduxStore, reducer, filter, excludeUnfilteredState}) {
     super();
 
     let remote = require('remote');
-    this.windowId = remote.getCurrentWindow().id;
     let browserStore = remote.getGlobal(this.globalName);
-    this.filter = browserStore.filters[this.windowId];
+
+    this.windowId = remote.getCurrentWindow().id;
+    this.filter = filter || true;
+    this.excludeUnfilteredState = excludeUnfilteredState || false;
 
     // The object returned here is out of our control and may be mutated
-    this.preload = cloneDeep(fillShape(browserStore.reduxStore.getState(), this.filter));
+    let storeData = browserStore.reduxStore.getState();
+    let filteredStoreData = this.excludeUnfilteredState ? fillShape(storeData, this.filter) : storeData;
+
+    // Objects that are remoted in have getters and setters added onto them.
+    // This breaks things like redux-immutable-state-invariant as they are state mutations
+    this.preload = cloneDeep(filteredStoreData);
     this.reduxStore = createReduxStore(this._parseReducer(reducer));
 
-    ipcRenderer.on('browser-dispatch', (event, action) => {
+    ipcRenderer.send(`${this.globalName}-register-renderer`, {windowId: this.windowId, filter: this.filter});
+
+    ipcRenderer.on(`${this.globalName}-browser-dispatch`, (event, action) => {
       this.reduxStore.dispatch(action);
     });
   }
@@ -42,7 +51,7 @@ export default class ReduxRendererStore extends ReduxElectronStore {
 
   dispatch(action) {
     action.source = `renderer ${this.windowId}`;
-    ipcRenderer.send('renderer-dispatch', action);
+    ipcRenderer.send(`${this.globalName}-renderer-dispatch`, action);
   }
 }
 
@@ -66,7 +75,8 @@ class ReduxRendererSyncStore extends ReduxRendererStore {
         return objectMerge(filteredState, action.data.updated);
       }
 
-      return reducer(state, action);
+      let reduced = reducer(state, action);
+      return this.excludeUnfilteredState ? fillShape(reduced, this.filter) : reduced;
     };
   }
 
