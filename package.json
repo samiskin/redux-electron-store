@@ -23,7 +23,9 @@
   },
   "homepage": "https://github.com/samiskin/redux-electron-store#readme",
   "dependencies": {
-    "lodash.clonedeep": "^3.0.2"
+    "lodash.clonedeep": "^3.0.2",
+    "lodash.isempty": "^3.0.4",
+    "lodash.isobject": "^3.0.2"
   },
   "devDependencies": {
     "babel-cli": "^6.3.17",

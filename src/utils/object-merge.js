@@ -1,4 +1,4 @@
-import { isObject } from './lodash-clones';
+import isObject from 'lodash.isobject';
 
 export default function objectMerge(objA, objB) {
   let merged = {};

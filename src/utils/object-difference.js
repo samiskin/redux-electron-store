@@ -8,7 +8,8 @@
     {updated: {b: 2}, deleted: {a: true}}
 */
 
-import { isEmpty, isObject } from './lodash-clones';
+import isEmpty from 'lodash.isempty';
+import isObject from 'lodash.isobject';
 
 export default function objectDifference(oldValue, newValue) {
 

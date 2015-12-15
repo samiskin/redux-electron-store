@@ -1,9 +1,8 @@
-import ReduxBrowserStore from './redux-browser-store';
-import { ReduxRendererStore, ReduxRendererSyncStore } from './redux-renderer-store';
+let store = null;
+if (process.type === 'browser') {
+  store = require('./redux-browser-store').default;
+} else {
+  store = require('./redux-renderer-store').default;
+}
 
-export {
-  ReduxBrowserStore,
-  ReduxRendererStore,
-  ReduxRendererSyncStore
-};
-
+export default store;

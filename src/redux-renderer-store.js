@@ -1,4 +1,4 @@
-const ipcRenderer = require('electron').ipcRenderer;
+import { ipcRenderer } from 'electron';
 import filterObject from './utils/filter-object';
 import objectMerge from './utils/object-merge';
 import fillShape from './utils/fill-shape';
@@ -6,22 +6,33 @@ import cloneDeep from 'lodash.cloneDeep';
 
 import ReduxElectronStore from './redux-electron-store';
 
-/**
- *
- *
- *
- *
- */
 export default class ReduxRendererStore extends ReduxElectronStore {
 
-  constructor({createReduxStore, reducer, filter, excludeUnfilteredState}) {
+  /**
+   * Creates a store which registers itself to the browser store and
+   * updates its own store based on dispatches from the browser
+   * @class
+   * @param {Object} p - The parameters
+   * @param {Function} p.createReduxStore - The redux createStore function that takes in a reducer
+   * @param {Function} p.reducer - The redux reducer you would normally pass in to createStore
+   * @param {Function|Object|true} p.filter - A filter specifying what parameters this window listens to
+   * @param {Boolean} p.excludeUnfilteredState - Whether all values not specified in the shape should be undefined
+   * @param {Boolean} p.synchronous - Whether dispatches from this process should run in both this and the browser
+   *                                  process, or allow all processing to be done in the browser process.
+   */
+  constructor({createReduxStore, reducer, filter, excludeUnfilteredState, synchronous}) {
     super();
 
     let remote = require('remote');
     let browserStore = remote.getGlobal(this.globalName);
 
+    if (!browserStore) {
+      throw new Error(`ReduxElectronStore must be created in the Browser process first`);
+    }
+
     this.windowId = remote.getCurrentWindow().id;
     this.filter = filter || true;
+    this.synchronous = synchronous || true;
     this.excludeUnfilteredState = excludeUnfilteredState || false;
 
     // The object returned here is out of our control and may be mutated
@@ -36,7 +47,9 @@ export default class ReduxRendererStore extends ReduxElectronStore {
     ipcRenderer.send(`${this.globalName}-register-renderer`, {windowId: this.windowId, filter: this.filter});
 
     ipcRenderer.on(`${this.globalName}-browser-dispatch`, (event, action) => {
-      this.reduxStore.dispatch(action);
+      if (!this.synchronous || action.source !== this.getSource()) {
+        this.reduxStore.dispatch(action);
+      }
     });
   }
 
@@ -44,33 +57,7 @@ export default class ReduxRendererStore extends ReduxElectronStore {
     return (state, action) => {
       if (action.type === '@@INIT') return this.preload;
 
-      let filteredState = filterObject(state, action.data.deleted);
-      return objectMerge(filteredState, action.data.updated);
-    };
-  }
-
-  dispatch(action) {
-    action.source = `renderer ${this.windowId}`;
-    ipcRenderer.send(`${this.globalName}-renderer-dispatch`, action);
-  }
-}
-
-/**
- *
- *
- */
-class ReduxRendererSyncStore extends ReduxRendererStore {
-
-  dispatch(action) {
-    action.source = `renderer ${this.windowId}`;
-    super.dispatch(action);
-  }
-
-  _parseReducer(reducer) {
-    return (state, action) => {
-      if (action.type === '@@INIT') return this.preload;
-
-      if (action.source === 'browser') {
+      if (action.source !== this.getSource()) {
         let filteredState = filterObject(state, action.data.deleted);
         return objectMerge(filteredState, action.data.updated);
       }
@@ -80,9 +67,22 @@ class ReduxRendererSyncStore extends ReduxRendererStore {
     };
   }
 
-}
+  /**
+   * @return {string} - the value of "action.source" for actions originating from this process
+   */
+  getSource() {
+    return `renderer ${this.windowId}`;
+  }
 
-export {
-  ReduxRendererStore,
-  ReduxRendererSyncStore
-};
+  /**
+   * Runs the dispatch if the store is synchronous, and forwards the action to the browser
+   */
+  dispatch(action) {
+    action.source = this.getSource();
+    if (this.synchronous) {
+      super.dispatch(action);
+    }
+
+    ipcRenderer.send(`${this.globalName}-renderer-dispatch`, action);
+  }
+}

@@ -1,9 +1,15 @@
 
 const GLOBAL_VARIABLE_NAME = '__ELECTRON_REDUX_STORE__';
 
+/**
+ * Sets up a global accessor to this store and provides
+ * the same API that Redux does.
+*/
 export default class ReduxElectronStore {
 
   constructor() {
+    // This global allows the Renderer to access the
+    // browser process's store (to initialize its data)
     this.globalName = GLOBAL_VARIABLE_NAME;
     global[this.globalName] = this;
   }

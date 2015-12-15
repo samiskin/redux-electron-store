@@ -1,4 +1,4 @@
-import { isObject } from './lodash-clones';
+import isObject from 'lodash.isobject';
 // Given an source object and a filter shape, remove all leaf elements in the shape
 // from the source.  Example:
 // filterObject({'a': 1, 'b':{'c': {}}}, {'b': {'c': true}})

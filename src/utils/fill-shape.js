@@ -25,7 +25,7 @@ Will return:
 }
 */
 
-import { isEmpty } from './lodash-clones';
+import isEmpty from 'lodash.isempty';
 
 export default function fillShape(source, sink) {
   if (typeof sink === 'function') {
