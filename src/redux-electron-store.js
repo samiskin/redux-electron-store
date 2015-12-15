@@ -1,14 +1,14 @@
 
-const GLOBAL_VARIABLE_NAME = '__electron-redux-store_global';
+const GLOBAL_VARIABLE_NAME = '__ELECTRON_REDUX_STORE__';
 
 export default class ReduxElectronStore {
 
   constructor() {
     this.globalName = GLOBAL_VARIABLE_NAME;
-    global[GLOBAL_VARIABLE_NAME] = this;
+    global[this.globalName] = this;
   }
 
-  parseReducer(reducer) {
+  _parseReducer(reducer) {
     return reducer;
   }
 
@@ -29,7 +29,7 @@ export default class ReduxElectronStore {
   }
 
   replaceReducer(nextReducer) {
-    return this.reduxStore.nextReducer(this.parseReducer(nextReducer));
+    return this.reduxStore.nextReducer(this._parseReducer(nextReducer));
   }
 
 }

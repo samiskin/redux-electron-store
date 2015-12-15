@@ -6,9 +6,15 @@ import cloneDeep from 'lodash.cloneDeep';
 
 import ReduxElectronStore from './redux-electron-store';
 
+/**
+ *
+ *
+ *
+ *
+ */
 export default class ReduxRendererStore extends ReduxElectronStore {
 
-  constructor(reduxStoreCreator, reducer) {
+  constructor({createReduxStore, reducer}) {
     super();
 
     let remote = require('remote');
@@ -18,14 +24,14 @@ export default class ReduxRendererStore extends ReduxElectronStore {
 
     // The object returned here is out of our control and may be mutated
     this.preload = cloneDeep(fillShape(browserStore.reduxStore.getState(), this.filter));
-    this.reduxStore = reduxStoreCreator(this.parseReducer(reducer));
+    this.reduxStore = createReduxStore(this._parseReducer(reducer));
 
     ipcRenderer.on('browser-dispatch', (event, action) => {
       this.reduxStore.dispatch(action);
     });
   }
 
-  parseReducer(reducer) {
+  _parseReducer(reducer) {
     return (state, action) => {
       if (action.type === '@@INIT') return this.preload;
 
@@ -40,6 +46,10 @@ export default class ReduxRendererStore extends ReduxElectronStore {
   }
 }
 
+/**
+ *
+ *
+ */
 class ReduxRendererSyncStore extends ReduxRendererStore {
 
   dispatch(action) {
@@ -47,7 +57,7 @@ class ReduxRendererSyncStore extends ReduxRendererStore {
     super.dispatch(action);
   }
 
-  parseReducer(reducer) {
+  _parseReducer(reducer) {
     return (state, action) => {
       if (action.type === '@@INIT') return this.preload;
 

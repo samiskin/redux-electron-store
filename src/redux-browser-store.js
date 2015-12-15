@@ -5,11 +5,18 @@ import fillShape from './utils/fill-shape';
 import objectDifference from './utils/object-difference.js';
 import ReduxElectronStore from './redux-electron-store';
 
+
+/**
+ * Processes dispatches from either calls to `ReduxBrowserStore.dispatch`
+ * or 'renderer-dispatch' ipc messages containing an action. On every
+ * dispatch, any changed properties are forwarded to all windows where
+ * any of the changed properties pass the window's filter
+ */
 export default class ReduxBrowserStore extends ReduxElectronStore {
 
-  constructor(reduxStoreCreator, reducer) {
+  constructor({createReduxStore, reducer}) {
     super();
-    this.reduxStore = reduxStoreCreator(this.parseReducer(reducer));
+    this.reduxStore = createReduxStore(this._parseReducer(reducer));
 
     this.windows = {};
     this.filters = {};
@@ -30,7 +37,6 @@ export default class ReduxBrowserStore extends ReduxElectronStore {
   }
 
   dispatch(action) {
-
     action.source = action.source || 'browser';
     let prevState = this.getState();
     super.dispatch(action);
@@ -48,7 +54,6 @@ export default class ReduxBrowserStore extends ReduxElectronStore {
         this.windows[winId].webContents.send('browser-dispatch', payload);
       }
     }
-
   }
 
 }
