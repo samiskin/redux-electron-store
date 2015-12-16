@@ -57,9 +57,9 @@ export default class ReduxRendererStore extends ReduxElectronStore {
 
   _parseReducer(reducer) {
     return (state, action) => {
-      if (action.type === '@@INIT') return this.preload;
+      if (action.type === '@@INIT' || action.type === '@@redux/INIT') return this.preload;
 
-      if (action.source !== this.getSource()) {
+      if (!this.synchronous || action.source !== this.getSource()) {
         let filteredState = filterObject(state, action.data.deleted);
         return objectMerge(filteredState, action.data.updated);
       }

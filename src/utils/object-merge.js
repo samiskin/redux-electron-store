@@ -1,4 +1,5 @@
 import isObject from 'lodash.isobject';
+import isArray from 'lodash.isarray';
 
 export default function objectMerge(objA, objB) {
   let merged = {};
@@ -8,7 +9,7 @@ export default function objectMerge(objA, objB) {
 
     if (a === b){
       merged[key] = a;
-    } else if (isObject(a) && isObject(b)) {
+    } else if (!isArray(a) && !isArray(b) && isObject(a) && isObject(b)) {
       merged[key] = objectMerge(a, b);
     } else {
       merged[key] = b !== undefined ? b : a; // default to b if it exists

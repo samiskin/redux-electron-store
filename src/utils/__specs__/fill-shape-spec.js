@@ -49,14 +49,14 @@ test('Basic functionality', (t) => {
       notifyPosition: 'top-right',
       version: '0.1.0'
     },
-    notifications: {
-      '12345': {
+    notifications: [
+      {
         content: 'Hello World'
       },
-      '54321': {
+      {
         content: 'Hello Mars'
       }
-    },
+    ],
     teams: {
       '123': {
         name: 'The A Team',
@@ -95,14 +95,14 @@ test('Basic functionality', (t) => {
       settings: {
         notifyPosition: 'top-right'
       },
-      notifications: {
-        '12345': {
+      notifications: [
+        {
           content: 'Hello World'
         },
-        '54321': {
+        {
           content: 'Hello Mars'
         }
-      },
+      ],
       teams: {
         '123': {
           icons: {
