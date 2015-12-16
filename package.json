@@ -5,7 +5,8 @@
   "main": "lib/index.js",
   "scripts": {
     "compile": "babel -d lib/ src/",
-    "watch": "babel -d lib/ src/ --watch --sourceMaps=true"
+    "watch": "babel -d lib/ src/ --watch --sourceMaps=true",
+    "prepublish": "npm compile"
   },
   "repository": {
     "type": "git",
