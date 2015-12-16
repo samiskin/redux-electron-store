@@ -15,12 +15,12 @@ export default class ReduxRendererStore extends ReduxElectronStore {
    * @param {Object} p - The parameters
    * @param {Function} p.createReduxStore - The redux createStore function that takes in a reducer
    * @param {Function} p.reducer - The redux reducer you would normally pass in to createStore
-   * @param {Function|Object|true} p.filter - A filter specifying what parameters this window listens to
+   * @param {Function|Object|true} p.filter - A filter specifying what parameters this renderer listens to
    * @param {Boolean} p.excludeUnfilteredState - Whether all values not specified in the shape should be undefined
    * @param {Boolean} p.synchronous - Whether dispatches from this process should run in both this and the browser
    *                                  process, or allow all processing to be done in the browser process.
    */
-  constructor({createReduxStore, reducer, filter, excludeUnfilteredState, synchronous}) {
+  constructor({createReduxStore, reducer, filter, excludeUnfilteredState, synchronous: synchronous = true}) {
     super();
 
     let remote = require('remote');
@@ -30,9 +30,11 @@ export default class ReduxRendererStore extends ReduxElectronStore {
       throw new Error(`ReduxElectronStore must be created in the Browser process first`);
     }
 
-    this.windowId = remote.getCurrentWindow().id;
+    // When this is instantiated inside a webview, process.guestInstanceId exists
+    this.rendererId = process.guestInstanceId || remote.getCurrentWindow().id;
+
     this.filter = filter || true;
-    this.synchronous = synchronous || true;
+    this.synchronous = synchronous;
     this.excludeUnfilteredState = excludeUnfilteredState || false;
 
     // The object returned here is out of our control and may be mutated
@@ -44,7 +46,7 @@ export default class ReduxRendererStore extends ReduxElectronStore {
     this.preload = cloneDeep(filteredStoreData);
     this.reduxStore = createReduxStore(this._parseReducer(reducer));
 
-    ipcRenderer.send(`${this.globalName}-register-renderer`, {windowId: this.windowId, filter: this.filter});
+    ipcRenderer.send(`${this.globalName}-register-renderer`, {filter: this.filter});
 
     ipcRenderer.on(`${this.globalName}-browser-dispatch`, (event, action) => {
       if (!this.synchronous || action.source !== this.getSource()) {
@@ -71,7 +73,11 @@ export default class ReduxRendererStore extends ReduxElectronStore {
    * @return {string} - the value of "action.source" for actions originating from this process
    */
   getSource() {
-    return `renderer ${this.windowId}`;
+    if (process.guestInstanceId) {
+      return `webview ${this.rendererId}`;
+    } else {
+      return `window ${this.rendererId}`;
+    }
   }
 
   /**

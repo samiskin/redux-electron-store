@@ -3,7 +3,7 @@ import fillShape from '../fill-shape';
 
 
 test('Basic functionality', (t) => {
-  t.plan(2);
+  t.plan(3);
 
   let basicSource = {
     teams: {
@@ -42,6 +42,30 @@ test('Basic functionality', (t) => {
   t.deepEquals(
     fillShape(basicSource, true),
     basicSource
+  );
+
+  let basicUpdate = {
+    app: {
+      clickCount: 4
+    }
+  };
+
+  let basicUpdateShape = {
+    app: {
+      clickCount: true,
+      clickCounts: {
+        countsA: true
+      }
+    }
+  };
+
+  t.deepEquals(
+    fillShape(basicUpdate, basicUpdateShape),
+    {
+      app: {
+        clickCount: 4
+      }
+    }
   );
 });
 

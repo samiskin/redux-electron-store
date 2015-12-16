@@ -1,2 +1,3 @@
-# redux-electron
-A redux implementation which interfaces with Electron
+# redux-electron-store
+
+A redux implementation which synchronizes its own data between the different processes it is created in.

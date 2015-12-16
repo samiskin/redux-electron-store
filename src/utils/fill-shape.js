@@ -28,6 +28,7 @@ Will return:
 import isEmpty from 'lodash.isempty';
 
 export default function fillShape(source, sink) {
+
   if (typeof sink === 'function') {
     sink = sink(source);
   }
@@ -44,7 +45,7 @@ export default function fillShape(source, sink) {
       || typeof sink[key] === 'function'
       || sink[key] === true) {
       let filledChildren = fillShape(source[key], sink[key]);
-      if (!isEmpty(filledChildren)) {
+      if (filledChildren && (typeof filledChildren !== 'object' || !isEmpty(filledChildren))) {
         filledObject[key] = filledChildren;
       }
     } else {

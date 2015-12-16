@@ -1,21 +1,20 @@
 import { ipcMain } from 'electron';
-import { isEmpty } from './utils/lodash-clones';
+import isEmpty from 'lodash.isempty';
 import fillShape from './utils/fill-shape';
 import objectDifference from './utils/object-difference.js';
 import ReduxElectronStore from './redux-electron-store';
 
-
 /**
  * Processes dispatches from either calls to `ReduxBrowserStore.dispatch`
  * or 'renderer-dispatch' ipc messages containing an action. On every
- * dispatch, any changed properties are forwarded to all windows where
- * any of the changed properties pass the window's filter
+ * dispatch, any changed properties are forwarded to all renderers where
+ * any of the changed properties pass the renderer's filter
  */
 export default class ReduxBrowserStore extends ReduxElectronStore {
 
   /**
    * Creates a store which receives dispatches through IPC and function calls
-   * and forwards all dispatches to windows which register themselves through ipc.
+   * and forwards all dispatches to renderers which register themselves through ipc.
    * @class
    * @param {Object} p - The parameters
    * @param {Function} p.createReduxStore - The redux createStore function that takes in a reducer
@@ -25,26 +24,41 @@ export default class ReduxBrowserStore extends ReduxElectronStore {
     super();
     this.reduxStore = createReduxStore(this._parseReducer(reducer));
 
-    this.windows = {}; // windowId -> BrowserWindow.webContents
-    this.filters = {}; // windowId -> Object/function/true
+    this.renderers = {}; // webContentsId -> webContents
+    this.filters = {}; // webContentsId -> Object/function/true
+
+    // TODO: Clean this up. This is needed because for some reason after
+    // refresh, webContents.send on an old webContents will just send it to the
+    // new webContents on that window
+    this.windowIdsToContentsIds = {}; // windowId -> webContentsId
 
     ipcMain.on(`${this.globalName}-renderer-dispatch`, (event, action) => {
       this.dispatch(action);
     });
 
-    ipcMain.on(`${this.globalName}-register-renderer`, ({sender}, {windowId, filter}) => {
-      this.windows[windowId] = sender;
-      this.filters[windowId] = filter;
+    ipcMain.on(`${this.globalName}-register-renderer`, ({sender}, {filter}) => {
+      let webContentsId = sender.getId();
+      this.renderers[webContentsId] = sender;
+      this.filters[webContentsId] = filter;
+
+      if (!sender.isGuest()) { // For windows (not webviews)
+        let browserWindow = sender.getOwnerBrowserWindow();
+
+        // TODO: Clean this up
+        if (this.windowIdsToContentsIds[browserWindow.id] !== undefined) {
+          this.unregisterRenderer(this.windowIdsToContentsIds[browserWindow.id]);
+        }
+        this.windowIdsToContentsIds[browserWindow.id] = webContentsId;
+
+        // BrowserWindows closing don't seem to destroy the webContents
+        browserWindow.on('closed', () => this.unregisterRenderer(webContentsId));
+      }
     });
   }
 
-  /**
-   * Deletes all records of a window
-   * @param {Number} windowId - the id of the window to unregister
-   */
-  unregisterWindow(windowId) {
-    delete this.windows[windowId];
-    delete this.filters[windowId];
+  unregisterRenderer(webContentsId) {
+    delete this.renderers[webContentsId];
+    delete this.filters[webContentsId];
   }
 
   /**
@@ -60,16 +74,24 @@ export default class ReduxBrowserStore extends ReduxElectronStore {
     let newState = this.getState();
     let stateDifference = objectDifference(prevState, newState);
 
-    for (let windowId in this.windows) {
-      let shape = this.filters[windowId];
+    for (let webContentsId in this.renderers) {
+
+      let webContents = this.renderers[webContentsId];
+
+      if (webContents.isDestroyed() || webContents.isCrashed()) {
+        this.unregisterRenderer(webContentsId);
+        return;
+      }
+
+      let shape = this.filters[webContentsId];
       let updated = fillShape(stateDifference.updated, shape);
       let deleted = fillShape(stateDifference.deleted, shape);
 
-      // If any data the window is watching changes, send an ipc
+      // If any data the renderer is watching changes, send an ipc
       // call to inform it of the updated and deleted data
       if (!isEmpty(updated) || !isEmpty(deleted)) {
         let payload = Object.assign({}, action, { data: {updated, deleted} });
-        this.windows[windowId].send(`${this.globalName}-browser-dispatch`, payload);
+        webContents.send(`${this.globalName}-browser-dispatch`, payload);
       }
     }
   }
