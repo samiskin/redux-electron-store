@@ -1,7 +1,7 @@
 {
   "name": "redux-electron-store",
   "version": "0.1.0",
-  "description": "A redux store that handles synchronizing its data between Electron processes",
+  "description": "Redux store which synchronizes between instances in multiple process",
   "main": "lib/index.js",
   "scripts": {
     "compile": "babel -d lib/ src/",
@@ -9,10 +9,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/samiskin/redux-electron-store.git"
+    "url": "https://github.com/samiskin/redux-electron-store.git"
   },
   "keywords": [
     "redux",
+    "reducer",
+    "state",
+    "sync",
     "electron",
     "atom"
   ],
