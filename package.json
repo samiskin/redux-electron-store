@@ -6,7 +6,7 @@
   "scripts": {
     "compile": "babel -d lib/ src/",
     "watch": "babel -d lib/ src/ --watch --sourceMaps=true",
-    "prepublish": "npm compile"
+    "prepublish": "npm run compile"
   },
   "repository": {
     "type": "git",
