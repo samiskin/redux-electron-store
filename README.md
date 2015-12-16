@@ -1,6 +1,6 @@
 # redux-electron-store
 
-This is a class which offers the same api as a [Redux](https://github.com/rackt/redux/) store, however it handles synchronizing stores initialized in the various processes of an Electron app.
+This library solves the problem of synchronizing [Redux](https://github.com/rackt/redux/) stores in [Electron](https://github.com/atom/electron) apps. Electron is based on Chromium, and thus all Electron apps have a single [main process](https://github.com/atom/electron/blob/master/docs/tutorial/quick-start.md#differences-between-main-process-and-renderer-process) and (potentially) multiple renderer processes, one for each web page. `redux-electron-store` allows us to define a store per process, and uses [`ipc`](https://github.com/atom/electron/blob/master/docs/api/ipc-main.md) to keep them in sync in an efficient manner.
 
 ## Installation
 ```bash
@@ -9,9 +9,9 @@ npm i redux-electron-store
 
 ## Usage
 
-#### Browser Process
+#### Main Process
 
-In the browser process `ReduxElectronStore` takes in a redux `createStore` function as well as a redux reducer, and once instantiated can act just like a normal redux store.
+In the main process `ReduxElectronStore` takes in a Redux `createStore` function as well as a Redux reducer, and once instantiated can act just like a normal store.
 
 ```javascript
 let createReduxStore = compose(
