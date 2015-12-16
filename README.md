@@ -55,7 +55,9 @@ let filter = {
     notifyPosition: true
   },
   teams: (teams) => {
-    return _.mapValues(teams, (team) => _.pick(teams, 'icons'));
+    return _.mapValues(teams, (team) => {
+      return {icons: true};
+    });
   }
 }
 
