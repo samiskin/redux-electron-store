@@ -44,7 +44,10 @@ If the filter is a `function`, the function will be called with the variable the
 
 If the filter is an `object`, its keys must be properties of the variable the filter is acting on, and its values are themselves filters which describe the value(s) of that property that will pass through the filter.
 
-**Example Problem**: I am creating a Notifications window.  For this to work, I need to know the position to display the notifications, the notifications themselves, and the icons for each team to display as a thumbnail.  Any other data in my app has no bearing on this window, therefore it would be a waste for this window to have updates for any other data sent to it.
+**Example Problem**: 
+
+
+>I am creating a Notifications window.  For this to work, I need to know the position to display the notifications, the notifications themselves, and the icons for each team to display as a thumbnail.  Any other data in my app has no bearing on this window, therefore it would be a waste for this window to have updates for any other data sent to it.
 
 **Solution**:
 ```javascript
