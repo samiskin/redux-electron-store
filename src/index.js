@@ -5,4 +5,4 @@ if (process.type === 'browser') {
   store = require('./redux-renderer-store').default;
 }
 
-export default store;
+module.exports = store;
