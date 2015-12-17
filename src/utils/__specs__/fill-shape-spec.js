@@ -57,6 +57,10 @@ test('Basic functionality', (t) => {
         content: 'Hello Mars'
       }
     ],
+    emptyList: [],
+    zero: 0,
+    bool: false,
+    emptyObj: {},
     teams: {
       '123': {
         name: 'The A Team',
@@ -82,6 +86,10 @@ test('Basic functionality', (t) => {
     settings: {
       notifyPosition: true
     },
+    emptyList: true,
+    zero: true,
+    bool: true,
+    emptyObj: true,
     teams: (teams) => {
       return _.mapValues(teams, (team) => {
         return {icons: true};
@@ -103,6 +111,10 @@ test('Basic functionality', (t) => {
           content: 'Hello Mars'
         }
       ],
+      emptyList: [],
+      zero: 0,
+      bool: false,
+      emptyObj: {},
       teams: {
         '123': {
           icons: {

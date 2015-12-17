@@ -1,5 +1,5 @@
 import { ipcMain } from 'electron';
-import isEmpty from 'lodash.isempty';
+import _ from 'lodash';
 import fillShape from './utils/fill-shape';
 import objectDifference from './utils/object-difference.js';
 import ReduxElectronStore from './redux-electron-store';
@@ -20,8 +20,9 @@ export default class ReduxBrowserStore extends ReduxElectronStore {
    * @param {Function} p.createReduxStore - The redux createStore function that takes in a reducer
    * @param {Function} p.reducer - The redux reducer you would normally pass in to createStore
    */
-  constructor({createReduxStore, reducer}) {
-    super();
+  constructor(p) {
+    super(p);
+    let {createReduxStore, reducer} = p;
     this.reduxStore = createReduxStore(this._parseReducer(reducer));
 
     this.renderers = {}; // webContentsId -> webContents
@@ -89,7 +90,7 @@ export default class ReduxBrowserStore extends ReduxElectronStore {
 
       // If any data the renderer is watching changes, send an ipc
       // call to inform it of the updated and deleted data
-      if (!isEmpty(updated) || !isEmpty(deleted)) {
+      if (!_.isEmpty(updated) || !_.isEmpty(deleted)) {
         let payload = Object.assign({}, action, { data: {updated, deleted} });
         webContents.send(`${this.globalName}-browser-dispatch`, payload);
       }

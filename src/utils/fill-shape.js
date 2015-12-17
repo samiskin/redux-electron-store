@@ -25,7 +25,7 @@ Will return:
 }
 */
 
-import isEmpty from 'lodash.isempty';
+import _ from 'lodash';
 
 export default function fillShape(source, sink) {
 
@@ -35,19 +35,18 @@ export default function fillShape(source, sink) {
 
   if (sink === true) {
     return source;
+  } else if (sink === undefined) {
+    return undefined;
   }
 
-  let filledObject = Array.isArray(source) ? [] : {};
-  Object.keys(sink).forEach((key) => {
+  let filledObject = {};
+  _.keys(sink).forEach((key) => {
     if (source[key] === undefined) {
       return;
     } else if (typeof sink[key] === 'object'
       || typeof sink[key] === 'function'
       || sink[key] === true) {
-      let filledChildren = fillShape(source[key], sink[key]);
-      if (filledChildren && (typeof filledChildren !== 'object' || !isEmpty(filledChildren))) {
-        filledObject[key] = filledChildren;
-      }
+      filledObject[key] = fillShape(source[key], sink[key]);
     } else {
       throw new Error('Values in the sink must be another object, function, or `true`');
     }

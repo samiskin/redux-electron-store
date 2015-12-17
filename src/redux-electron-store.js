@@ -7,11 +7,13 @@ const GLOBAL_VARIABLE_NAME = '__ELECTRON_REDUX_STORE__';
 */
 export default class ReduxElectronStore {
 
-  constructor() {
+  constructor({preDispatchCallback, postDispatchCallback}) {
     // This global allows the Renderer to access the
     // browser process's store (to initialize its data)
     this.globalName = GLOBAL_VARIABLE_NAME;
     global[this.globalName] = this;
+    this.preDispatchCallback = preDispatchCallback || (() => {});
+    this.postDispatchCallback = postDispatchCallback || (() => {});
   }
 
   _parseReducer(reducer) {
@@ -27,7 +29,9 @@ export default class ReduxElectronStore {
   }
 
   dispatch(action) {
-    return this.reduxStore.dispatch(action);
+    this.preDispatchCallback(action);
+    this.reduxStore.dispatch(action);
+    this.postDispatchCallback(action);
   }
 
   subscribe(listener) {

@@ -2,7 +2,7 @@ import { ipcRenderer } from 'electron';
 import filterObject from './utils/filter-object';
 import objectMerge from './utils/object-merge';
 import fillShape from './utils/fill-shape';
-import cloneDeep from 'lodash.cloneDeep';
+import _ from 'lodash';
 
 import ReduxElectronStore from './redux-electron-store';
 
@@ -20,8 +20,9 @@ export default class ReduxRendererStore extends ReduxElectronStore {
    * @param {Boolean} p.synchronous - Whether dispatches from this process should run in both this and the browser
    *                                  process, or allow all processing to be done in the browser process.
    */
-  constructor({createReduxStore, reducer, filter, excludeUnfilteredState, synchronous: synchronous = true}) {
-    super();
+  constructor(p) {
+    super(p);
+    let {createReduxStore, reducer, filter, excludeUnfilteredState, synchronous: synchronous = true} = p;
 
     let remote = require('remote');
     let browserStore = remote.getGlobal(this.globalName);
@@ -43,7 +44,7 @@ export default class ReduxRendererStore extends ReduxElectronStore {
 
     // Objects that are remoted in have getters and setters added onto them.
     // This breaks things like redux-immutable-state-invariant as they are state mutations
-    this.preload = cloneDeep(filteredStoreData);
+    this.preload = _.cloneDeep(filteredStoreData);
     this.reduxStore = createReduxStore(this._parseReducer(reducer));
 
     ipcRenderer.send(`${this.globalName}-register-renderer`, {filter: this.filter});
