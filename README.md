@@ -11,6 +11,8 @@ npm i redux-electron-store
 
 ## Usage
 
+Note:  This fits a __lot__ better as a store enhancer to Redux, so I will try it out. Expect the API to change to something nicer soon.
+
 #### Main Process
 
 In the main process `ReduxElectronStore` takes in a Redux `createStore` function as well as a Redux reducer, and once instantiated can act just like a normal store.
