@@ -2,7 +2,7 @@
 [![npm version](https://img.shields.io/npm/v/redux-electron-store.svg?style=flat-square)](https://www.npmjs.com/package/redux-electron-store)
 [![npm downloads](https://img.shields.io/npm/dm/redux-electron-store.svg?style=flat-square)](https://www.npmjs.com/package/redux-electron-store)
 
-This library solves the problem of synchronizing [Redux](https://github.com/rackt/redux/) stores in [Electron](https://github.com/atom/electron) apps. Electron is based on Chromium, and thus all Electron apps have a single [main process](https://github.com/atom/electron/blob/master/docs/tutorial/quick-start.md#differences-between-main-process-and-renderer-process) and (potentially) multiple renderer processes, one for each web page. `redux-electron-store` allows us to define a store per process, and uses [`ipc`](https://github.com/atom/electron/blob/master/docs/api/ipc-main.md) to keep them in sync in an efficient manner.
+This library solves the problem of synchronizing [Redux](https://github.com/rackt/redux/) stores in [Electron](https://github.com/atom/electron) apps. Electron is based on Chromium, and thus all Electron apps have a single [main process](https://github.com/atom/electron/blob/master/docs/tutorial/quick-start.md#differences-between-main-process-and-renderer-process) and (potentially) multiple renderer processes, one for each web page. `redux-electron-store` allows us to define a store per process, and uses [`ipc`](https://github.com/atom/electron/blob/master/docs/api/ipc-main.md) to keep them in sync in an efficient manner.  It is implemented as a [redux store enhancer](https://github.com/rackt/redux/blob/master/docs/Glossary.md#store-enhancer).
 
 ## Installation
 ```bash
@@ -15,15 +15,16 @@ Note:  This fits a __lot__ better as a store enhancer to Redux, so I will try it
 
 #### Main Process
 
-In the main process `ReduxElectronStore` takes in a Redux `createStore` function as well as a Redux reducer, and once instantiated can act just like a normal store.
 
 ```javascript
-let createReduxStore = compose(
+import { electronEnhancer } from 'redux-electron-store';
+
+let finalCreateStore = compose(
   applyMiddleware(...middleware),
-  DevTools.instrument()
+  electronEnhancer()
 )(createStore);
-let reducer = (state, action) => { ... };
-let store = new ReduxElectronStore({createReduxStore, reducer});
+
+let store = finalCreateStore(reducer);
 ```
 
 #### Renderer / Webview Process
@@ -34,8 +35,13 @@ In the renderer process, the store takes the same `createStore` and `reducer` pr
 let filter = {
   notifications: true,
   settings: true
-}
-this.store = new ReduxElectronStore({createReduxStore, reducer, filter});
+};
+
+let finalCreateStore = compose(
+  applyMiddleware(...middleware),
+  electronEnhancer({filter}),
+  DevTools.instrument()
+)(createStore);
 ```
 
 ##### Filters
@@ -48,7 +54,7 @@ If the filter is a `function`, the function will be called with the variable the
 
 If the filter is an `object`, its keys must be properties of the variable the filter is acting on, and its values are themselves filters which describe the value(s) of that property that will pass through the filter.
 
-**Example Problem**: 
+**Example Problem**:
 
 
 >I am creating a Notifications window for Slack's application.  For this to work, I need to know the position to display the notifications, the notifications themselves, and the icons for each team to display as a thumbnail.  Any other data in my app has no bearing on this window, therefore it would be a waste for this window to have updates for any other data sent to it.
@@ -66,17 +72,14 @@ let filter = {
       return {icons: true};
     });
   }
-}
-
-this.store = new ReduxElectronStore({createReduxStore, reducer, filter});
+};
 ```
 
 A full electron example of this library in action is soon to come
 
-
 ## TODOs
 
+1. Document the other options of the enhancer in the Renderer
+1. Decide on a testing framework / library
+1. Add unit tests
 1. Create working Electron App to serve as a complete example
-2. Decide on a testing framework / library
-3. Add unit tests for utility functions
-4. Enable handling multiple stores
