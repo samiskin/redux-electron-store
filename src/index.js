@@ -1,8 +1,10 @@
-let store = null;
+let storeEnhancer = null;
 if (process.type === 'browser') {
-  store = require('./redux-browser-store').default;
+  storeEnhancer = require('./electronBrowserEnhancer').default;
 } else {
-  store = require('./redux-renderer-store').default;
+  storeEnhancer = require('./electronRendererEnhancer').default;
 }
 
-module.exports = store;
+module.exports = {
+  electronEnhancer: storeEnhancer
+}
