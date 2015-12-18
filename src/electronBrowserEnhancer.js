@@ -1,16 +1,20 @@
 import _ from 'lodash';
 import fillShape from './utils/fill-shape';
 import objectDifference from './utils/object-difference.js';
-import ReduxElectronStore from './redux-electron-store';
 
 let globalName = '__REDUX_ELECTRON_STORE__';
 
-export default function electronBrowserEnhancer(params) {
+/**
+ * Creates a store enhancer which allows a redux store to synchronize its data
+ * with an electronEnhanced store in the browser process.
+ * @param {Object} p - The parameters to the creator
+ * @param {Function} p.postDispatchCallback - A callback to run after a dispatch has occurred.
+ * @param {Function} p.preDispatchCallback - A callback to run before an action is dispatched.
+*/
+export default function electronBrowserEnhancer({postDispatchCallback, preDispatchCallback}) {
 
-  let {postDispatchCallback, preDispatchCallback} = params;
   postDispatchCallback = postDispatchCallback || (() => null);
   preDispatchCallback = preDispatchCallback || (() => null);
-
 
   return (storeCreator) => {
     return (reducer, initialState) => {
@@ -22,7 +26,9 @@ export default function electronBrowserEnhancer(params) {
       let renderers = {};
       let filters = {};
 
-      // TODO: Clean this up
+      // TODO: Clean this up to something more clear.  The reason this is necessary
+      // is becasue when a BrowserWindow is refreshed, new webContents are made but
+      // the old ones also persist, so actions get dispatched multiple times.
       let windowIdsToContentsIds = {};
 
       let unregisterRenderer = (webContentsId) => {
@@ -71,7 +77,7 @@ export default function electronBrowserEnhancer(params) {
           let webContents = renderers[webContentsId];
 
           if (webContents.isDestroyed() || webContents.isCrashed()) {
-            unregisterRenderer();
+            unregisterRenderer(webContentsId);
             return;
           }
 
