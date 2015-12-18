@@ -51,7 +51,7 @@ export default class ReduxRendererStore extends ReduxElectronStore {
 
     ipcRenderer.on(`${this.globalName}-browser-dispatch`, (event, action) => {
       if (!this.synchronous || action.source !== this.getSource()) {
-        this.reduxStore.dispatch(action);
+        super.dispatch(action);
       }
     });
   }
