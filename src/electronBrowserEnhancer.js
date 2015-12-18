@@ -11,11 +11,10 @@ let globalName = '__REDUX_ELECTRON_STORE__';
  * @param {Function} p.postDispatchCallback - A callback to run after a dispatch has occurred.
  * @param {Function} p.preDispatchCallback - A callback to run before an action is dispatched.
 */
-export default function electronBrowserEnhancer({postDispatchCallback, preDispatchCallback}) {
-
-  postDispatchCallback = postDispatchCallback || (() => null);
-  preDispatchCallback = preDispatchCallback || (() => null);
-
+export default function electronBrowserEnhancer({
+  postDispatchCallback: postDispatchCallback = (() => null),
+  preDispatchCallback: preDispatchCallback = (() => null)
+}) {
   return (storeCreator) => {
     return (reducer, initialState) => {
       let { ipcMain } = require('electron');
@@ -34,7 +33,7 @@ export default function electronBrowserEnhancer({postDispatchCallback, preDispat
       let unregisterRenderer = (webContentsId) => {
         delete renderers[webContentsId];
         delete filters[webContentsId];
-      }
+      };
 
       ipcMain.on(`${globalName}-renderer-dispatch`, (event, action) => {
         store.dispatch(action);
@@ -73,7 +72,6 @@ export default function electronBrowserEnhancer({postDispatchCallback, preDispat
         let stateDifference = objectDifference(prevState, newState);
 
         for (let webContentsId in renderers) {
-
           let webContents = renderers[webContentsId];
 
           if (webContents.isDestroyed() || webContents.isCrashed()) {
@@ -92,10 +90,10 @@ export default function electronBrowserEnhancer({postDispatchCallback, preDispat
             webContents.send(`${globalName}-browser-dispatch`, payload);
           }
         }
-      }
+      };
 
       return store;
-    }
-  }
+    };
+  };
 }
 

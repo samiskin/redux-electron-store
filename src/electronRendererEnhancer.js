@@ -16,15 +16,14 @@ let globalName = '__REDUX_ELECTRON_STORE__';
  * @param {Function} p.postDispatchCallback - A callback to run after a dispatch has occurred.
  * @param {Function} p.preDispatchCallback - A callback to run before an action is dispatched.
 */
-export default function electronRendererEnhancer({filter, excludeUnfilteredState, synchronous, postDispatchCallback, preDispatchCallback, stateTransformer}) {
-
-  postDispatchCallback = postDispatchCallback || (() => null);
-  preDispatchCallback = preDispatchCallback || (() => null);
-  excludeUnfilteredState = excludeUnfilteredState || false;
-  synchronous = synchronous !== undefined ? synchronous : true;
-  stateTransformer = stateTransformer || ((state) => state);
-  filter = filter || true;
-
+export default function electronRendererEnhancer({
+  filter: filter = true,
+  excludeUnfilteredState: excludeUnfilteredState = false,
+  synchronous: synchronous = true,
+  postDispatchCallback: postDispatchCallback = (() => null),
+  preDispatchCallback: preDispatchCallback = (() => null),
+  stateTransformer: stateTransformer = ((state) => state)
+}) {
   return (storeCreator) => {
     return (reducer, initialState = {}) => {
       let { ipcRenderer } = require('electron');
@@ -39,8 +38,8 @@ export default function electronRendererEnhancer({filter, excludeUnfilteredState
       let filteredStoreData = excludeUnfilteredState ? fillShape(storeData, filter) : storeData;
       let preload = stateTransformer(_.cloneDeep(filteredStoreData)); // Clonedeep is used as remote'd objects are handled in a unique way (breaks redux-immutable-state-invariant)
       let newInitialState = objectMerge(initialState, preload);
-      let currentSource = process.guestInstanceId ? `webview ${rendererId}` : `window ${rendererId}`;
 
+      let currentSource = process.guestInstanceId ? `webview ${rendererId}` : `window ${rendererId}`;
 
       // Dispatches from the browser are in the format of {type, data: {updated, deleted}}.
       let parsedReducer = (state = newInitialState, action) => {
@@ -55,7 +54,6 @@ export default function electronRendererEnhancer({filter, excludeUnfilteredState
         let reduced = reducer(state, action);
         return excludeUnfilteredState ? fillShape(reduced, filter) : reduced;
       };
-
 
       let store = storeCreator(parsedReducer, newInitialState);
 
