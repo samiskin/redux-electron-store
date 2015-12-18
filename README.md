@@ -11,8 +11,6 @@ npm i redux-electron-store
 
 ## Usage
 
-Note:  This fits a __lot__ better as a store enhancer to Redux, so I will try it out. Expect the API to change to something nicer soon.
-
 #### Main Process
 
 
