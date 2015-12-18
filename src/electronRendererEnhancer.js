@@ -44,9 +44,9 @@ export default function electronRendererEnhancer({
       // Dispatches from the browser are in the format of {type, data: {updated, deleted}}.
       let parsedReducer = (state = newInitialState, action) => {
         if (!action.source) return state; // If its not from an electronEnhanced store, ignore it
-        action.data.deleted = stateTransformer(action.data.deleted);
-        action.data.updated = stateTransformer(action.data.updated);
         if (!synchronous || action.source !== currentSource) {
+          action.data.deleted = stateTransformer(action.data.deleted);
+          action.data.updated = stateTransformer(action.data.updated);
           let filteredState = filterObject(state, action.data.deleted);
           return objectMerge(filteredState, action.data.updated);
         }
