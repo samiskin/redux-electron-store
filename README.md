@@ -54,7 +54,6 @@ If the filter is an `object`, its keys must be properties of the variable the fi
 
 **Example Problem**:
 
-
 >I am creating a Notifications window for Slack's application.  For this to work, I need to know the position to display the notifications, the notifications themselves, and the icons for each team to display as a thumbnail.  Any other data in my app has no bearing on this window, therefore it would be a waste for this window to have updates for any other data sent to it.
 
 **Solution**:
@@ -73,11 +72,9 @@ let filter = {
 };
 ```
 
-A full electron example of this library in action is soon to come
-
+More options are documented in the [api docs](https://github.com/samiskin/redux-electron-store/blob/master/docs/api.md), and a description of exactly how this library works is on the way.  
 ## TODOs
 
-1. Document the other options of the enhancer in the Renderer
-1. Decide on a testing framework / library
-1. Add unit tests
+1. Add the functionality to persist state across application executions.
+1. Formalize and implement unit testing
 1. Create working Electron App to serve as a complete example
