@@ -1,8 +1,10 @@
 import _ from 'lodash';
 import fillShape from './utils/fill-shape';
-import objectDifference from './utils/object-difference.js';
+import objectDifference from './utils/object-difference';
+import LocalStorage from './local-storage';
 
 let globalName = '__REDUX_ELECTRON_STORE__';
+let STATE_STORAGE_NAME = 'state';
 
 /**
  * Creates a store enhancer which allows a redux store to synchronize its data
@@ -10,16 +12,27 @@ let globalName = '__REDUX_ELECTRON_STORE__';
  * @param {Object} p - The parameters to the creator
  * @param {Function} p.postDispatchCallback - A callback to run after a dispatch has occurred.
  * @param {Function} p.preDispatchCallback - A callback to run before an action is dispatched.
+ * @param {String} p.persistFilePath - If a filepath is provided, loads from and saves the store into the provided path.
+ * @param {Function} p.persistFilter - The filter for what data should be persisted
 */
 export default function electronBrowserEnhancer({
   postDispatchCallback: postDispatchCallback = (() => null),
-  preDispatchCallback: preDispatchCallback = (() => null)
+  preDispatchCallback: preDispatchCallback = (() => null),
+  persistFilePath: persistFilePath = null,
+  persistFilter: true
 }) {
   return (storeCreator) => {
     return (reducer, initialState) => {
       let { ipcMain } = require('electron');
 
-      let store = storeCreator(reducer, initialState);
+      let localStorage = null;
+      let newInitialState = initialState;
+      if (persistFilePath) {
+        localStorage = new LocalStorage(persistFilePath);
+        newInitialState = _.objectMerge(initialState, localStorage.getItem(STATE_STORAGE_NAME));
+      }
+
+      let store = storeCreator(reducer, newInitialState);
       global[globalName] = store;
 
       let renderers = {};
@@ -58,6 +71,14 @@ export default function electronBrowserEnhancer({
         }
       });
 
+      if (localStorage) {
+        let oldSave = store.save || (() => null);
+        store.save = (...params) => {
+          oldSave(...params);
+          let persistedData = fillShape(store.getState(), persistFilter);
+          localStorage.setItem(STATE_STORAGE_NAME, persistedData);
+        }
+      }
 
       let oldDispatchMethod = store.dispatch;
 
