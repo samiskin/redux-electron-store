@@ -19,11 +19,17 @@ import { electronEnhancer } from 'redux-electron-store';
 
 let finalCreateStore = compose(
   applyMiddleware(...middleware),
-  electronEnhancer()
+  electronEnhancer({
+    persistState: true,
+    persistShape: { settings: true } // A filter (see below)
+  })
 )(createStore);
 
-let store = finalCreateStore(reducer);
+let store = finalCreateStore(reducer); // Initial state will be loaded from file
+
+store.save(); // Saves the settings to a default JSON file
 ```
+
 
 #### Renderer / Webview Process
 
