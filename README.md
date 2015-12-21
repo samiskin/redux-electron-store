@@ -27,7 +27,7 @@ let store = finalCreateStore(reducer);
 
 #### Renderer / Webview Process
 
-In the renderer process, the store takes the same `createStore` and `reducer` properties, however it can also take a `filter`.  `filter` is a way of describing exactly what data this renderer process wishes to be notified of.
+In the renderer process, the store will handle the `filter` property in its parameter.  `filter` is a way of describing exactly what data this renderer process wishes to be notified of.  If a filter is provided, all updates which do not change a property which passes the filter will not be forwarded to the current renderer.
 
 ```javascript
 let filter = {
