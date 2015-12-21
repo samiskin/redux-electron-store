@@ -60,21 +60,25 @@ export default function electronRendererEnhancer({
       // Renderers register themselves to the electronEnhanced store in the browser proecss
       ipcRenderer.send(`${globalName}-register-renderer`, {filter});
 
+      let storeDotDispatch = store.dispatch;
+      let doDispatch = (action) => {
+        preDispatchCallback(action);
+        storeDotDispatch(action);
+        postDispatchCallback(action);
+      };
+
       // Dispatches from other processes are forwarded using this ipc message
       ipcRenderer.on(`${globalName}-browser-dispatch`, (event, action) => {
         if (!synchronous || action.source !== currentSource) {
-          store.dispatch(action);
+          doDispatch(action);
         }
       });
 
-      let oldDispatchMethod = store.dispatch;
       store.dispatch = (action) => {
         action.source = action.source || currentSource;
 
         if (synchronous || action.source !== currentSource) {
-          preDispatchCallback(action);
-          oldDispatchMethod(action);
-          postDispatchCallback(action);
+          doDispatch(action);
         }
 
         if (action.source === currentSource) {
