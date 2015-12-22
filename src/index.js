@@ -7,4 +7,4 @@ if (process.type === 'browser') {
 
 module.exports = {
   electronEnhancer: storeEnhancer
-}
+};

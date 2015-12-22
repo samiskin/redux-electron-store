@@ -35,11 +35,18 @@ export default function electronBrowserEnhancer({
         delete filters[webContentsId];
       };
 
+      let storeDotDispatch = store.dispatch;
+      let doDispatch = (action) => {
+        preDispatchCallback(action);
+        storeDotDispatch(action);
+        postDispatchCallback(action);
+      };
+
       ipcMain.on(`${globalName}-renderer-dispatch`, (event, action) => {
         store.dispatch(action);
       });
 
-      ipcMain.on(`${globalName}-register-renderer`, ({sender}, {filter}) => {
+      ipcMain.on(`${globalName}-register-renderer`, ({ sender }, { filter }) => {
         let webContentsId = sender.getId();
         renderers[webContentsId] = sender;
         filters[webContentsId] = filter;
@@ -58,16 +65,11 @@ export default function electronBrowserEnhancer({
         }
       });
 
-
-      let oldDispatchMethod = store.dispatch;
-
       store.dispatch = (action) => {
         action.source = action.source || 'browser';
 
         let prevState = store.getState();
-        preDispatchCallback(action);
-        oldDispatchMethod(action);
-        postDispatchCallback(action);
+        doDispatch(action);
         let newState = store.getState();
         let stateDifference = objectDifference(prevState, newState);
 
@@ -86,7 +88,7 @@ export default function electronBrowserEnhancer({
           // If any data the renderer is watching changes, send an ipc
           // call to inform it of the updated and deleted data
           if (!_.isEmpty(updated) || !_.isEmpty(deleted)) {
-            let payload = Object.assign({}, action, { data: {updated, deleted} });
+            let payload = Object.assign({}, action, { data: { updated, deleted } });
             webContents.send(`${globalName}-browser-dispatch`, payload);
           }
         }
@@ -96,4 +98,3 @@ export default function electronBrowserEnhancer({
     };
   };
 }
-

@@ -11,7 +11,6 @@
 import _ from 'lodash';
 
 export default function objectDifference(oldValue, newValue) {
-
   let updated = {};
   let deleted = {};
 
@@ -39,5 +38,5 @@ export default function objectDifference(oldValue, newValue) {
     deleted[key] = true;
   });
 
-  return {updated, deleted};
+  return { updated, deleted };
 }

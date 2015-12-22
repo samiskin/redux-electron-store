@@ -58,7 +58,7 @@ export default function electronRendererEnhancer({
       let store = storeCreator(parsedReducer, newInitialState);
 
       // Renderers register themselves to the electronEnhanced store in the browser proecss
-      ipcRenderer.send(`${globalName}-register-renderer`, {filter});
+      ipcRenderer.send(`${globalName}-register-renderer`, { filter });
 
       let storeDotDispatch = store.dispatch;
       let doDispatch = (action) => {

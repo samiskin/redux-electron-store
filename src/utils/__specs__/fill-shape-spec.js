@@ -91,8 +91,8 @@ test('Basic functionality', (t) => {
     bool: true,
     emptyObj: true,
     teams: (teams) => {
-      return _.mapValues(teams, (team) => {
-        return {icons: true};
+      return _.mapValues(teams, () => {
+        return { icons: true };
       });
     }
   };
@@ -134,4 +134,3 @@ test('Basic functionality', (t) => {
     }
   );
 });
-

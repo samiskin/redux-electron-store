@@ -6,7 +6,7 @@ export default function objectMerge(objA, objB) {
     let a = objA[key];
     let b = objB[key];
 
-    if (a === b){
+    if (a === b) {
       merged[key] = a;
     } else if (!_.isArray(a) && !_.isArray(b) && _.isObject(a) && _.isObject(b)) {
       merged[key] = objectMerge(a, b);
@@ -16,8 +16,9 @@ export default function objectMerge(objA, objB) {
   });
 
   _.keys(objB).forEach((key) => {
-    if (objA[key] === undefined) // fill in the rest
+    if (objA[key] === undefined) { // fill in the rest
       merged[key] = objB[key];
+    }
   });
 
   return merged;

@@ -28,9 +28,8 @@ Will return:
 import _ from 'lodash';
 
 export default function fillShape(source, sink) {
-
   if (typeof sink === 'function') {
-    sink = sink(source);
+    sink = sink(source); //eslint-disable-line
   }
 
   if (sink === true) {
