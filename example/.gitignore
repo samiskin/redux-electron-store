@@ -1,0 +1,8 @@
+/node_modules
+bundle.js*
+/build
+*.map
+
+*.log
+
+static/storage.json

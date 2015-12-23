@@ -1,0 +1,59 @@
+{
+  "name": "redux-electron-store-example",
+  "version": "0.1.0",
+  "main": "main.js",
+  "scripts": {
+    "start": "HOT=1 NODE_ENV=development electron ./build/main.js",
+    "watch": "node server.js"
+  },
+  "bin": {
+    "electron": "./node_modules/.bin/electron"
+  },
+  "devDependencies": {
+    "babel": "^5.8.23",
+    "babel-core": "^5.8.23",
+    "babel-eslint": "^4.1.1",
+    "babel-loader": "^5.3.2",
+    "babel-plugin-react-transform": "^1.1.1",
+    "css-loader": "^0.23.1",
+    "electron-packager": "^5.2.0",
+    "electron-prebuilt": "^0.36.1",
+    "electron-rebuild": "^1.0.2",
+    "eslint": "^1.10.3",
+    "eslint-config-airbnb": "^2.1.1",
+    "eslint-plugin-react": "^3.12.0",
+    "express": "^4.13.3",
+    "history": "^1.13.1",
+    "postcss-import": "^7.1.3",
+    "postcss-loader": "^0.8.0",
+    "precss": "^1.3.0",
+    "react-transform-catch-errors": "^1.0.0",
+    "react-transform-hmr": "^1.0.1",
+    "redbox-react": "^1.2.0",
+    "redux-devtools": "^3.0.0",
+    "redux-devtools-dock-monitor": "^1.0.1",
+    "redux-devtools-log-monitor": "^1.0.1",
+    "redux-immutable-state-invariant": "^1.2.0",
+    "source-map-support": "^0.4.0",
+    "style-loader": "^0.13.0",
+    "webpack": "^1.12.9",
+    "webpack-dev-middleware": "^1.4.0",
+    "webpack-hot-middleware": "^2.6.0",
+    "webpack-target-electron-renderer": "^0.3.0"
+  },
+  "dependencies": {
+    "electron-debug": "^0.5.1",
+    "history": "^1.17.0",
+    "lodash": "^3.10.1",
+    "react": "^0.14.3",
+    "react-dom": "^0.14.3",
+    "react-redux": "^4.0.3",
+    "react-router": "^1.0.2",
+    "redux": "^3.0.5",
+    "redux-logger": "^2.3.1",
+    "redux-thunk": "^1.0.2"
+  },
+  "devEngines": {
+    "node": "4.x"
+  }
+}
