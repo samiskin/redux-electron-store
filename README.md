@@ -80,3 +80,9 @@ More options are documented in the [api docs](https://github.com/samiskin/redux-
 1. Add the functionality to persist state across application executions.
 1. Formalize and implement unit testing
 1. Create working Electron App to serve as a complete example
+
+
+
+### License
+
+MIT
