@@ -10,7 +10,7 @@ let logger = createLogger({
   duration: true
 });
 
-let finalCreateStore = compose(
+let storeEnhancers = compose(
   fluxEnhancer({
     app: AppStore
   }),
@@ -18,13 +18,14 @@ let finalCreateStore = compose(
 );
 
 if (process.type === 'renderer' && !process.guestInstanceId) {
-  finalCreateStore = compose(
-    finalCreateStore,
+  let DevTools = require('DevTools');
+  storeEnhancers = compose(
+    storeEnhancers,
     require('DevTools').instrument()
   );
 }
 
-let store = finalCreateStore(createStore)(() => {});
+let store = storeEnhancers(createStore)(() => {});
 
 export default store;
 
