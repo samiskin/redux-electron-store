@@ -1,14 +1,22 @@
 import React from 'react';
-import Component from 'Component';
+import { connect } from 'react-redux';
 
-export default class Secondary extends Component {
+class Secondary extends React.Component {
+
+  static propTypes = {
+    clickCount: React.PropTypes.number.isRequired
+  }
 
   render() {
     return (
       <div className="Secondary">
-        Hello Mars!
+        Hello Mars!  You've clicked {this.props.clickCount} number of times
       </div>
     );
   }
 
 }
+
+export default connect((state) => ({
+  clickCount: state.clickCount
+}))(Secondary);

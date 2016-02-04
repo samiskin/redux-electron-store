@@ -20,7 +20,14 @@ module.exports = {
   ],
   module: {
     loaders: [
-      {test: /\.jsx?$/, loaders: ['babel?breakConfig'], exclude: /node_modules/}
+      {
+        test: /\.jsx?$/,
+        loader: 'babel',
+        query: {
+          cacheDirectory: true
+        },
+        exclude: /node_modules/
+      },
     ]
   }
 };

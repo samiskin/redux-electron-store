@@ -1,9 +1,10 @@
 import { compose, createStore, applyMiddleware } from 'redux';
 import createLogger from 'redux-logger';
 import thunk from 'redux-thunk';
-import { fluxEnhancer } from 'redux-flux-store';
-
-import AppStore from 'stores/AppStore';
+import { electronEnhancer } from 'redux-electron-store';
+import React from 'react';
+import shallowEqual from 'utils/shallowEqual';
+import rootReducer from '../reducers';
 
 let logger = createLogger({
   level: 'info',
@@ -11,21 +12,59 @@ let logger = createLogger({
 });
 
 let storeEnhancers = compose(
-  fluxEnhancer({
-    app: AppStore
-  }),
-  applyMiddleware(thunk, logger)
+  applyMiddleware(thunk, logger),
+  // electronEnhancer({filter: true})
 );
 
 if (process.type === 'renderer' && !process.guestInstanceId) {
-  let DevTools = require('DevTools');
   storeEnhancers = compose(
     storeEnhancers,
-    require('DevTools').instrument()
+    require('DevTools').default.instrument()
   );
 }
 
-let store = storeEnhancers(createStore)(() => {});
+let store = storeEnhancers(createStore)(rootReducer);
 
 export default store;
 
+/*export function connect(mapStateToProps) {
+
+  return (WrappedComponent) => {
+    class Connect extends React.Component {
+
+      constructor(props) {
+        super(props);
+        this.store = store;
+        this.state = mapStateToProps(store.getState());
+        this.unsubscribe = store.subscribe(() => {
+          this.setState(mapStateToProps(this.store.getState()));
+        });
+      }
+
+      shouldComponentUpdate(nextProps, nextState) {
+        return !shallowEqual(this.props, nextProps) ||
+               !shallowEqual(this.state, nextState);
+      }
+
+      computeMergedProps() {
+        return {
+          ...this.props,
+          ...this.state
+        };
+      }
+
+      componentWillUnmount() {
+        this.unsubscribe();
+      }
+
+      render() {
+        return React.createElement(WrappedComponent, this.computeMergedProps());
+      }
+    }
+
+    Connect.displayName = `Connect(${WrappedComponent.displayName})`;
+
+    return Connect;
+  }
+
+}*/
