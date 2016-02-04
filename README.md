@@ -17,14 +17,15 @@ npm i redux-electron-store
 
 
 ```javascript
+import { createStore, applyMiddleware, compose } from 'redux';
 import { electronEnhancer } from 'redux-electron-store';
 
-let finalCreateStore = compose(
+let enhancer = compose(
   applyMiddleware(...middleware),
   electronEnhancer()
-)(createStore);
+);
 
-let store = finalCreateStore(reducer);
+let store = createStore(reducer, initialState, enhancer);
 ```
 
 #### Renderer / Webview Process
@@ -37,11 +38,13 @@ let filter = {
   settings: true
 };
 
-let finalCreateStore = compose(
+let enhancer = compose(
   applyMiddleware(...middleware),
   electronEnhancer({filter}),
   DevTools.instrument()
-)(createStore);
+);
+
+let store = createStore(reducer, initialState, enhancer);
 ```
 
 ##### Filters
