@@ -14,7 +14,7 @@ let globalName = '__REDUX_ELECTRON_STORE__';
 export default function electronBrowserEnhancer({
   postDispatchCallback: postDispatchCallback = (() => null),
   preDispatchCallback: preDispatchCallback = (() => null)
-}) {
+} = {}) {
   return (storeCreator) => {
     return (reducer, initialState) => {
       let { ipcMain } = require('electron');

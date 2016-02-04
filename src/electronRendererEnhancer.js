@@ -23,7 +23,7 @@ export default function electronRendererEnhancer({
   postDispatchCallback: postDispatchCallback = (() => null),
   preDispatchCallback: preDispatchCallback = (() => null),
   stateTransformer: stateTransformer = ((state) => state)
-}) {
+} = {}) {
   return (storeCreator) => {
     return (reducer, initialState = {}) => {
       let { ipcRenderer } = require('electron');
