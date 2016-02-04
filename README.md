@@ -25,6 +25,7 @@ let enhancer = compose(
   electronEnhancer()
 );
 
+// Note: passing enhancer as the last argument to createStore requires redux@>=3.1.0
 let store = createStore(reducer, initialState, enhancer);
 ```
 
@@ -44,6 +45,7 @@ let enhancer = compose(
   DevTools.instrument()
 );
 
+// Note: passing enhancer as the last argument to createStore requires redux@>=3.1.0
 let store = createStore(reducer, initialState, enhancer);
 ```
 
