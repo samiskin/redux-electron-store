@@ -11,9 +11,10 @@ let logger = createLogger({
   duration: true
 });
 
+console.log("Doing stuff");
 let storeEnhancers = compose(
   applyMiddleware(thunk, logger),
-  // electronEnhancer({filter: true})
+  electronEnhancer()
 );
 
 if (process.type === 'renderer' && !process.guestInstanceId) {

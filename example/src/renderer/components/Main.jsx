@@ -6,7 +6,7 @@ class Main extends React.Component {
 
   static propTypes = {
     clickCount: React.PropTypes.number.isRequired
-  }
+  };
 
   handleClick(e) {
     CounterActions.increment();

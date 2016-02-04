@@ -1,5 +1,6 @@
 import url from 'url';
 import BrowserWindow from 'browser-window';
+import Store from 'lib/Store';
 
 export default class Application {
 
@@ -11,7 +12,7 @@ export default class Application {
 
     let secondaryWindow = new BrowserWindow({
       width: 512,
-      height: 512
+      height: 1024
     });
 
     this.loadFileUrl({

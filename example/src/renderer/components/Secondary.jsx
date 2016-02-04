@@ -5,7 +5,7 @@ class Secondary extends React.Component {
 
   static propTypes = {
     clickCount: React.PropTypes.number.isRequired
-  }
+  };
 
   render() {
     return (
