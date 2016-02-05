@@ -5,7 +5,7 @@ import { connect } from 'react-redux';
 class Main extends React.Component {
 
   static propTypes = {
-    clickCount: React.PropTypes.number.isRequired
+    counter: React.PropTypes.number.isRequired
   };
 
   handleClick(e) {
@@ -16,7 +16,7 @@ class Main extends React.Component {
     return (
       <div className="Main">
         Hello World!
-        <button onClick={this.handleClick.bind(this)}> Click count: {this.props.clickCount} </button>
+        <button onClick={this.handleClick.bind(this)}> Click count: {this.props.counter} </button>
       </div>
     );
   }
@@ -24,5 +24,5 @@ class Main extends React.Component {
 }
 
 export default connect((state) => ({
-  clickCount: state.clickCount
+  counter: state.counter
 }))(Main);

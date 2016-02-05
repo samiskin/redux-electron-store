@@ -11,7 +11,6 @@ let logger = createLogger({
   duration: true
 });
 
-console.log("Doing stuff");
 let storeEnhancers = compose(
   applyMiddleware(thunk, logger),
   electronEnhancer()

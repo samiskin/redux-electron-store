@@ -4,13 +4,13 @@ import { connect } from 'react-redux';
 class Secondary extends React.Component {
 
   static propTypes = {
-    clickCount: React.PropTypes.number.isRequired
+    counter: React.PropTypes.number.isRequired
   };
 
   render() {
     return (
       <div className="Secondary">
-        Hello Mars!  You've clicked {this.props.clickCount} number of times
+        Hello Mars!  You've clicked {this.props.counter} number of times
       </div>
     );
   }
@@ -18,5 +18,5 @@ class Secondary extends React.Component {
 }
 
 export default connect((state) => ({
-  clickCount: state.clickCount
+  counter: state.counter
 }))(Secondary);

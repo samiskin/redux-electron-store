@@ -6,11 +6,11 @@ export const DECREMENT_COUNTER = 'DECREMENT_COUNTER';
 class CounterActions {
 
   increment() {
-    store.dispatch({type: INCREMENT_COUNTER});
+    Store.dispatch({type: INCREMENT_COUNTER});
   }
 
   decrement() {
-    store.dispatch({type: DECREMENT_COUNTER});
+    Store.dispatch({type: DECREMENT_COUNTER});
   }
 
 }
