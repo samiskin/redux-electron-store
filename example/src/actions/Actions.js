@@ -2,8 +2,9 @@ import Store from 'Store';
 
 export const INCREMENT_COUNTER = 'INCREMENT_COUNTER'; // Symbol('CLICK');
 export const DECREMENT_COUNTER = 'DECREMENT_COUNTER';
+export const CHANGE_WORD = 'CHANGE_WORD';
 
-class CounterActions {
+class Actions {
 
   increment() {
     Store.dispatch({type: INCREMENT_COUNTER});
@@ -13,6 +14,10 @@ class CounterActions {
     Store.dispatch({type: DECREMENT_COUNTER});
   }
 
+  changeWord(newWord) {
+    Store.dispatch({type: CHANGE_WORD, data: newWord});
+  }
+
 }
 
-export default new CounterActions();
+export default new Actions();

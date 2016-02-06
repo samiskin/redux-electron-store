@@ -25,7 +25,7 @@ export default function electronRendererEnhancer({
   stateTransformer: stateTransformer = ((state) => state)
 }) {
   return (storeCreator) => {
-    return (reducer, initialState = {}) => {
+    return (reducer, initialState) => {
       let { ipcRenderer } = require('electron');
       let remote = require('remote');
 
@@ -37,7 +37,7 @@ export default function electronRendererEnhancer({
       let storeData = browserStore.getState();
       let filteredStoreData = excludeUnfilteredState ? fillShape(storeData, filter) : storeData;
       let preload = stateTransformer(_.cloneDeep(filteredStoreData)); // Clonedeep is used as remote'd objects are handled in a unique way (breaks redux-immutable-state-invariant)
-      let newInitialState = objectMerge(initialState, preload);
+      let newInitialState = objectMerge(initialState || reducer(undefined, {type: null}), preload);
 
       let currentSource = process.guestInstanceId ? `webview ${rendererId}` : `window ${rendererId}`;
 

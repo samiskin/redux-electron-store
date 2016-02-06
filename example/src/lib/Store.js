@@ -5,6 +5,7 @@ import { electronEnhancer } from 'redux-electron-store';
 import React from 'react';
 import shallowEqual from 'utils/shallowEqual';
 import rootReducer from '../reducers';
+import {persistStore, autoRehydrate} from 'redux-persist';
 
 let logger = createLogger({
   level: 'info',
@@ -17,13 +18,19 @@ let storeEnhancers = compose(
 );
 
 if (process.type === 'renderer' && !process.guestInstanceId) {
+
   storeEnhancers = compose(
+    autoRehydrate(),
     storeEnhancers,
     require('DevTools').default.instrument()
   );
 }
 
 let store = storeEnhancers(createStore)(rootReducer);
+
+if (process.type === 'renderer' && !process.guestInstanceId) {
+  persistStore(store, {whitelist:['word']});
+}
 
 export default store;
 
