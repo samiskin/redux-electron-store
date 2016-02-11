@@ -70,7 +70,7 @@ export default function electronRendererEnhancer({
       // Dispatches from other processes are forwarded using this ipc message
       ipcRenderer.on(`${globalName}-browser-dispatch`, (event, action) => {
         if (!synchronous || action.source !== currentSource) {
-          doDispatch(action);
+          doDispatch(JSON.parse(action));
         }
       });
 
@@ -82,7 +82,7 @@ export default function electronRendererEnhancer({
         }
 
         if (action.source === currentSource) {
-          ipcRenderer.send(`${globalName}-renderer-dispatch`, action);
+          ipcRenderer.send(`${globalName}-renderer-dispatch`, JSON.stringify(action));
         }
       };
 
