@@ -69,8 +69,9 @@ export default function electronRendererEnhancer({
 
       // Dispatches from other processes are forwarded using this ipc message
       ipcRenderer.on(`${globalName}-browser-dispatch`, (event, action) => {
+        action = JSON.parse(action);
         if (!synchronous || action.source !== currentSource) {
-          doDispatch(JSON.parse(action));
+          doDispatch(action);
         }
       });
 
