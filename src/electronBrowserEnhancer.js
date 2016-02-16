@@ -43,7 +43,7 @@ export default function electronBrowserEnhancer({
       };
 
       ipcMain.on(`${globalName}-renderer-dispatch`, (event, action) => {
-        store.dispatch(action);
+        store.dispatch(JSON.parse(action));
       });
 
       ipcMain.on(`${globalName}-register-renderer`, ({ sender }, { filter }) => {
@@ -89,7 +89,7 @@ export default function electronBrowserEnhancer({
           // call to inform it of the updated and deleted data
           if (!_.isEmpty(updated) || !_.isEmpty(deleted)) {
             let payload = Object.assign({}, action, { data: { updated, deleted } });
-            webContents.send(`${globalName}-browser-dispatch`, payload);
+            webContents.send(`${globalName}-browser-dispatch`, JSON.stringify(payload));
           }
         }
       };
