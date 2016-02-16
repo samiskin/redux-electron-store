@@ -76,6 +76,7 @@ export default function electronRendererEnhancer({
       });
 
       store.dispatch = (action) => {
+        if (!action) return;
         action.source = action.source || currentSource;
 
         if (synchronous || action.source !== currentSource) {

@@ -66,6 +66,7 @@ export default function electronBrowserEnhancer({
       });
 
       store.dispatch = (action) => {
+        if (!action) return;
         action.source = action.source || 'browser';
 
         let prevState = store.getState();
