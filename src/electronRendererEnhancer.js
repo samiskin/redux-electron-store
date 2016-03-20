@@ -44,9 +44,10 @@ export default function electronRendererEnhancer({
       let clientId = process.guestInstanceId ? `webview ${rendererId}` : `window ${rendererId}`;
       let currentSource = sourceName || clientId;
 
+      let mainProcessUpdateFlag = false;
       // Dispatches from the browser are in the format of {type, data: {updated, deleted}}.
       let parsedReducer = (state = newInitialState, action) => {
-        if (action.from_redux_electron_store) {
+        if (mainProcessUpdateFlag) {
           let data = action.data;
           data.deleted = stateTransformer(data.deleted);
           data.updated = stateTransformer(data.updated);
@@ -73,9 +74,10 @@ export default function electronRendererEnhancer({
       // Dispatches from other processes are forwarded using this ipc message
       ipcRenderer.on(`${globalName}-browser-dispatch`, (event, { action, sourceClientId }) => {
         action = JSON.parse(action);
-        action.from_redux_electron_store = true;
         if (!synchronous || sourceClientId !== clientId) {
+          mainProcessUpdateFlag = true;
           doDispatch(action);
+          mainProcessUpdateFlag = false;
         }
       });
 

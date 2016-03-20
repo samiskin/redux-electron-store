@@ -58,7 +58,7 @@ export default function electronBrowserEnhancer({
             unregisterRenderer(windowMap[browserWindow.id]);
           windowMap[browserWindow.id] = webContentsId;
 
-          // BrowserwindowMap closing don't actually destroy the webContents
+          // Webcontents aren't automatically destroyed on window close
           browserWindow.on('closed', () => unregisterRenderer(webContentsId));
         }
       });
