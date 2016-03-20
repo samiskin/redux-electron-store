@@ -15,6 +15,7 @@ let globalName = '__REDUX_ELECTRON_STORE__';
  * @param {Function} p.stateTransformer - A function that takes data from the browser store and returns an object in the proper format of the renderer's data (if you have different reducers between processes)
  * @param {Function} p.postDispatchCallback - A callback to run after a dispatch has occurred.
  * @param {Function} p.preDispatchCallback - A callback to run before an action is dispatched.
+ * @param {String} p.sourceName - An override to the 'source' property appended to every action
 */
 export default function electronRendererEnhancer({
   filter: filter = true,
@@ -22,7 +23,8 @@ export default function electronRendererEnhancer({
   synchronous: synchronous = true,
   postDispatchCallback: postDispatchCallback = (() => null),
   preDispatchCallback: preDispatchCallback = (() => null),
-  stateTransformer: stateTransformer = ((state) => state)
+  stateTransformer: stateTransformer = ((state) => state),
+  sourceName: sourceName = null
 } = {}) {
   return (storeCreator) => {
     return (reducer, initialState) => {
@@ -39,26 +41,27 @@ export default function electronRendererEnhancer({
       let preload = stateTransformer(_.cloneDeep(filteredStoreData)); // Clonedeep is used as remote'd objects are handled in a unique way (breaks redux-immutable-state-invariant)
       let newInitialState = objectMerge(initialState || reducer(undefined, {type: null}), preload);
 
-      let currentSource = process.guestInstanceId ? `webview ${rendererId}` : `window ${rendererId}`;
+      let clientId = process.guestInstanceId ? `webview ${rendererId}` : `window ${rendererId}`;
+      let currentSource = sourceName || clientId;
 
       // Dispatches from the browser are in the format of {type, data: {updated, deleted}}.
       let parsedReducer = (state = newInitialState, action) => {
-        if (!action.source) return state; // If its not from an electronEnhanced store, ignore it
-        if (!synchronous || action.source !== currentSource) {
-          action.data.deleted = stateTransformer(action.data.deleted);
-          action.data.updated = stateTransformer(action.data.updated);
-          let filteredState = filterObject(state, action.data.deleted);
-          return objectMerge(filteredState, action.data.updated);
+        if (action.from_redux_electron_store) {
+          let data = action.data;
+          data.deleted = stateTransformer(data.deleted);
+          data.updated = stateTransformer(data.updated);
+          let filteredState = filterObject(state, data.deleted);
+          return objectMerge(filteredState, data.updated);
+        } else {
+          let reduced = reducer(state, action);
+          return excludeUnfilteredState ? fillShape(reduced, filter) : reduced;
         }
-
-        let reduced = reducer(state, action);
-        return excludeUnfilteredState ? fillShape(reduced, filter) : reduced;
       };
 
       let store = storeCreator(parsedReducer, newInitialState);
 
       // Renderers register themselves to the electronEnhanced store in the browser proecss
-      ipcRenderer.send(`${globalName}-register-renderer`, { filter });
+      ipcRenderer.send(`${globalName}-register-renderer`, { filter, clientId });
 
       let storeDotDispatch = store.dispatch;
       let doDispatch = (action) => {
@@ -68,24 +71,23 @@ export default function electronRendererEnhancer({
       };
 
       // Dispatches from other processes are forwarded using this ipc message
-      ipcRenderer.on(`${globalName}-browser-dispatch`, (event, action) => {
+      ipcRenderer.on(`${globalName}-browser-dispatch`, (event, { action, sourceClientId }) => {
         action = JSON.parse(action);
-        if (!synchronous || action.source !== currentSource) {
+        action.from_redux_electron_store = true;
+        if (!synchronous || sourceClientId !== clientId) {
           doDispatch(action);
         }
       });
 
       store.dispatch = (action) => {
         if (!action) return;
-        action.source = action.source || currentSource;
+        action.source = currentSource;
 
-        if (synchronous || action.source !== currentSource) {
+        if (synchronous) {
           doDispatch(action);
         }
 
-        if (action.source === currentSource) {
-          ipcRenderer.send(`${globalName}-renderer-dispatch`, JSON.stringify(action));
-        }
+        ipcRenderer.send(`${globalName}-renderer-dispatch`, JSON.stringify(action));
       };
 
       return store;

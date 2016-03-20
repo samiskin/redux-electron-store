@@ -10,10 +10,12 @@ let globalName = '__REDUX_ELECTRON_STORE__';
  * @param {Object} p - The parameters to the creator
  * @param {Function} p.postDispatchCallback - A callback to run after a dispatch has occurred.
  * @param {Function} p.preDispatchCallback - A callback to run before an action is dispatched.
+ * @param {String} p.sourceName - An override to the 'source' property appended to every action
 */
 export default function electronBrowserEnhancer({
   postDispatchCallback: postDispatchCallback = (() => null),
-  preDispatchCallback: preDispatchCallback = (() => null)
+  preDispatchCallback: preDispatchCallback = (() => null),
+  sourceName: sourceName = null
 } = {}) {
   return (storeCreator) => {
     return (reducer, initialState) => {
@@ -22,17 +24,16 @@ export default function electronBrowserEnhancer({
       let store = storeCreator(reducer, initialState);
       global[globalName] = store;
 
-      let renderers = {};
-      let filters = {};
+      let clients = {}; // webContentsId -> {webContents, filter, clientId, windowId}
 
-      // TODO: Clean this up to something more clear.  The reason this is necessary
-      // is becasue when a BrowserWindow is refreshed, new webContents are made but
-      // the old ones also persist, so actions get dispatched multiple times.
-      let windowIdsToContentsIds = {};
+      // Need to keep track of windows, as when a window refreshes it creates a new
+      // webContents, and the old one must be unregistered
+      let windowMap = {}; // windowId -> webContentsId
+
+      let currentSource = sourceName || 'main_process';
 
       let unregisterRenderer = (webContentsId) => {
-        delete renderers[webContentsId];
-        delete filters[webContentsId];
+        delete clients[webContentsId];
       };
 
       let storeDotDispatch = store.dispatch;
@@ -42,47 +43,50 @@ export default function electronBrowserEnhancer({
         postDispatchCallback(action);
       };
 
-      ipcMain.on(`${globalName}-renderer-dispatch`, (event, action) => {
-        store.dispatch(JSON.parse(action));
-      });
-
-      ipcMain.on(`${globalName}-register-renderer`, ({ sender }, { filter }) => {
+      ipcMain.on(`${globalName}-register-renderer`, ({ sender }, { filter, clientId }) => {
         let webContentsId = sender.getId();
-        renderers[webContentsId] = sender;
-        filters[webContentsId] = filter;
+        clients[webContentsId] = {
+          webContents: sender,
+          filter,
+          clientId,
+          windowId: sender.getOwnerBrowserWindow().id
+        };
 
-        if (!sender.isGuest()) { // For windows (not webviews)
+        if (!sender.isGuest()) { // For windowMap (not webviews)
           let browserWindow = sender.getOwnerBrowserWindow();
+          if (windowMap[browserWindow.id] !== undefined)
+            unregisterRenderer(windowMap[browserWindow.id]);
+          windowMap[browserWindow.id] = webContentsId;
 
-          // TODO: Clean this up
-          if (windowIdsToContentsIds[browserWindow.id] !== undefined) {
-            unregisterRenderer(windowIdsToContentsIds[browserWindow.id]);
-          }
-          windowIdsToContentsIds[browserWindow.id] = webContentsId;
-
-          // BrowserWindows closing don't seem to destroy the webContents
+          // BrowserwindowMap closing don't actually destroy the webContents
           browserWindow.on('closed', () => unregisterRenderer(webContentsId));
         }
       });
 
+      let senderClientId = null;
+      ipcMain.on(`${globalName}-renderer-dispatch`, ({ sender }, action) => {
+        senderClientId = clients[sender.getId()].clientId;
+        store.dispatch(JSON.parse(action));
+        senderClientId = null;
+      });
+
       store.dispatch = (action) => {
-        if (!action) return;
-        action.source = action.source || 'browser';
+        action.source = action.source || currentSource;
 
         let prevState = store.getState();
         doDispatch(action);
         let newState = store.getState();
         let stateDifference = objectDifference(prevState, newState);
 
-        for (let webContentsId in renderers) {
-          let webContents = renderers[webContentsId];
+        for (let webContentsId in clients) {
+          let webContents = clients[webContentsId].webContents;
 
           if (webContents.isDestroyed() || webContents.isCrashed()) {
             unregisterRenderer(webContentsId);
             return;
           }
 
-          let shape = filters[webContentsId];
+          let shape = clients[webContentsId].filter;
           let updated = fillShape(stateDifference.updated, shape);
           let deleted = fillShape(stateDifference.deleted, shape);
 
@@ -90,7 +94,8 @@ export default function electronBrowserEnhancer({
           // call to inform it of the updated and deleted data
           if (!_.isEmpty(updated) || !_.isEmpty(deleted)) {
             let payload = Object.assign({}, action, { data: { updated, deleted } });
-            webContents.send(`${globalName}-browser-dispatch`, JSON.stringify(payload));
+            let transfer = { action: JSON.stringify(payload), sourceClientId: senderClientId || currentSource };
+            webContents.send(`${globalName}-browser-dispatch`, transfer);
           }
         }
       };
