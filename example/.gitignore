@@ -1,0 +1,9 @@
+/node_modules
+bundle.js*
+/build
+*.map
+*.swp
+
+*.log
+
+static/storage.json
