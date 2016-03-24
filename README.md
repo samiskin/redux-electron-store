@@ -105,7 +105,7 @@ Hot reloading of reducers needs to be done on both the renderer and the main pro
     event.returnValue = true;
   });
   ```
-  
+  - Note: Individual reducer files may also need to be deleted from the cache if they have been required elsewhere in the application
 
 ### License
 
