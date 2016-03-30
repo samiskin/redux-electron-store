@@ -48,6 +48,7 @@ export default function electronRendererEnhancer({
       // Dispatches from the browser are in the format of {type, data: {updated, deleted}}.
       let parsedReducer = (state = newInitialState, action) => {
         if (mainProcessUpdateFlag) {
+          mainProcessUpdateFlag = false;
           let data = action.data;
           data.deleted = stateTransformer(data.deleted);
           data.updated = stateTransformer(data.updated);
@@ -77,7 +78,6 @@ export default function electronRendererEnhancer({
         if (!synchronous || sourceClientId !== clientId) {
           mainProcessUpdateFlag = true;
           doDispatch(action);
-          mainProcessUpdateFlag = false;
         }
       });
 
