@@ -1,6 +1,5 @@
 # redux-electron-store
 [![npm version](https://img.shields.io/npm/v/redux-electron-store.svg?style=flat-square)](https://www.npmjs.com/package/redux-electron-store)
-[![npm downloads](https://img.shields.io/npm/dm/redux-electron-store.svg?style=flat-square)](https://www.npmjs.com/package/redux-electron-store)
 
 This library solves the problem of synchronizing [Redux](https://github.com/rackt/redux/) stores in [Electron](https://github.com/atom/electron) apps. Electron is based on Chromium, and thus all Electron apps have a single [main process](https://github.com/atom/electron/blob/master/docs/tutorial/quick-start.md#differences-between-main-process-and-renderer-process) and (potentially) multiple renderer processes, one for each web page. `redux-electron-store` allows us to define a store per process, and uses [`ipc`](https://github.com/atom/electron/blob/master/docs/api/ipc-main.md) to keep them in sync in an efficient manner.  It is implemented as a [redux store enhancer](https://github.com/rackt/redux/blob/master/docs/Glossary.md#store-enhancer).
 
@@ -49,7 +48,7 @@ let enhancer = compose(
 let store = createStore(reducer, initialState, enhancer);
 ```
 
-##### Filters
+#### Filters
 
 A filter can be an `object`, a `function`, or `true`.
 
@@ -80,13 +79,33 @@ let filter = {
 ```
 
 More options are documented in the [api docs](https://github.com/samiskin/redux-electron-store/blob/master/docs/api.md), and a description of exactly how this library works is on the way.  
-## TODOs
 
-1. Add the functionality to persist state across application executions.
-1. Formalize and implement unit testing
-1. Create working Electron App to serve as a complete example
+#### Hot Reloading Reducers
 
 
+Hot reloading of reducers needs to be done on both the renderer and the main process.  Doing this requires two things:
+
+- The renderer needs to inform the main process when it has reloaded
+  ```js
+  // In the renderer process
+  if (module.hot) {
+    module.hot.accept('../reducers', () => {
+      ipc.sendSync('renderer-reload');
+      store.replaceReducer(require('../reducers'))
+    });
+  }
+  ```
+
+- The main process needs to delete its cached `reducers` data
+  ```js
+  // In the main process
+  ipcMain.on('renderer-reload', (event, action) => {
+    delete require.cache[require.resolve('../reducers')];
+    store.replaceReducer(require('../reducers'));
+    event.returnValue = true;
+  });
+  ```
+  - Note: Individual reducer files may also need to be deleted from the cache if they have been required elsewhere in the application
 
 ### License
 
