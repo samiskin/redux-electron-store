@@ -24,7 +24,7 @@ export default function electronBrowserEnhancer({
       let store = storeCreator(reducer, initialState);
       global[globalName] = store;
 
-      let clients = {}; // webContentsId -> {webContents, filter, clientId, windowId}
+      let clients = {}; // webContentsId -> {webContents, filter, clientId, windowId, active}
 
       // Need to keep track of windows, as when a window refreshes it creates a new
       // webContents, and the old one must be unregistered
@@ -32,8 +32,10 @@ export default function electronBrowserEnhancer({
 
       let currentSource = sourceName || 'main_process';
 
+      // Cannot delete data, as events could still be sent after close
+      // events when a BrowserWindow is created using remote
       let unregisterRenderer = (webContentsId) => {
-        delete clients[webContentsId];
+        clients[webContentsId].active = false;
       };
 
       let storeDotDispatch = store.dispatch;
@@ -49,7 +51,8 @@ export default function electronBrowserEnhancer({
           webContents: sender,
           filter,
           clientId,
-          windowId: sender.getOwnerBrowserWindow().id
+          windowId: sender.getOwnerBrowserWindow().id,
+          active: true
         };
 
         if (!sender.isGuest()) { // For windowMap (not webviews)
@@ -83,6 +86,8 @@ export default function electronBrowserEnhancer({
         let stateDifference = objectDifference(prevState, newState);
 
         for (let webContentsId in clients) {
+          if (!clients[webContentsId].active) continue;
+
           let webContents = clients[webContentsId].webContents;
 
           if (webContents.isDestroyed() || webContents.isCrashed()) {
