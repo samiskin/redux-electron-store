@@ -92,7 +92,7 @@ export default function electronRendererEnhancer({
           doDispatch(action);
         }
 
-        ipcRenderer.send(`${globalName}-renderer-dispatch`, JSON.stringify(action));
+        ipcRenderer.send(`${globalName}-renderer-dispatch`, JSON.stringify({ action, clientId }));
       };
 
       return store;

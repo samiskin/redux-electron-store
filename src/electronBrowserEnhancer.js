@@ -67,9 +67,10 @@ export default function electronBrowserEnhancer({
       });
 
       let senderClientId = null;
-      ipcMain.on(`${globalName}-renderer-dispatch`, ({ sender }, action) => {
-        senderClientId = clients[sender.getId()].clientId;
-        store.dispatch(JSON.parse(action));
+      ipcMain.on(`${globalName}-renderer-dispatch`, ({ sender }, payload) => {
+        let { action, clientId } = JSON.parse(payload);
+        senderClientId = clientId;
+        store.dispatch(action);
         senderClientId = null;
       });
 
