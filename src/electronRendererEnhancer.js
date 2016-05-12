@@ -28,8 +28,7 @@ export default function electronRendererEnhancer({
 } = {}) {
   return (storeCreator) => {
     return (reducer, initialState) => {
-      let { ipcRenderer } = require('electron');
-      let remote = require('remote');
+      let { ipcRenderer, remote } = require('electron');
 
       // If this process is a webview, it will have a guestInstanceId.  Otherwise it is a window
       let rendererId = process.guestInstanceId || remote.getCurrentWindow().id;
