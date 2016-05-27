@@ -8,7 +8,8 @@
     {updated: {b: 2}, deleted: {a: true}}
 */
 
-import _ from 'lodash';
+import isObject from 'lodash/isObject';
+import isEmpty from 'lodash/isEmpty';
 
 export default function objectDifference(oldValue, newValue) {
   let updated = {};
@@ -22,11 +23,11 @@ export default function objectDifference(oldValue, newValue) {
     // are an object, check for differences in the objects and update our
     // diffs if there is anything there.  If it isn't an object, then it is either
     // a changed value or a new value, therefore add it to the updated object
-    if (_.isObject(oldValue[key]) && _.isObject(newValue[key]) &&
+    if (isObject(oldValue[key]) && isObject(newValue[key]) &&
       !Array.isArray(oldValue[key]) && !Array.isArray(newValue[key])) {
       let deep = objectDifference(oldValue[key], newValue[key]);
-      if (!_.isEmpty(deep.updated)) updated[key] = deep.updated;
-      if (!_.isEmpty(deep.deleted)) deleted[key] = deep.deleted;
+      if (!isEmpty(deep.updated)) updated[key] = deep.updated;
+      if (!isEmpty(deep.deleted)) deleted[key] = deep.deleted;
     } else {
       updated[key] = newValue[key];
     }

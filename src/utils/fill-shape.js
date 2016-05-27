@@ -25,7 +25,8 @@ Will return:
 }
 */
 
-import _ from 'lodash';
+import keys from 'lodash/keys';
+
 
 export default function fillShape(source, sink) {
   if (typeof sink === 'function') {
@@ -39,7 +40,7 @@ export default function fillShape(source, sink) {
   }
 
   let filledObject = {};
-  _.keys(sink).forEach((key) => {
+  keys(sink).forEach((key) => {
     if (source[key] === undefined) {
       return;
     } else if (typeof sink[key] === 'object'
