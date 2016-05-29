@@ -1,6 +1,6 @@
-import _ from 'lodash';
 import fillShape from './utils/fill-shape';
 import objectDifference from './utils/object-difference.js';
+import isEmpty from 'lodash/isEmpty';
 
 let globalName = '__REDUX_ELECTRON_STORE__';
 
@@ -57,8 +57,9 @@ export default function electronBrowserEnhancer({
 
         if (!sender.isGuest()) { // For windowMap (not webviews)
           let browserWindow = sender.getOwnerBrowserWindow();
-          if (windowMap[browserWindow.id] !== undefined)
+          if (windowMap[browserWindow.id] !== undefined) {
             unregisterRenderer(windowMap[browserWindow.id]);
+          }
           windowMap[browserWindow.id] = webContentsId;
 
           // Webcontents aren't automatically destroyed on window close
@@ -102,7 +103,7 @@ export default function electronBrowserEnhancer({
 
           // If any data the renderer is watching changes, send an ipc
           // call to inform it of the updated and deleted data
-          if (!_.isEmpty(updated) || !_.isEmpty(deleted)) {
+          if (!isEmpty(updated) || !isEmpty(deleted)) {
             let payload = Object.assign({}, action, { data: { updated, deleted } });
             let transfer = { action: JSON.stringify(payload), sourceClientId: senderClientId || currentSource };
             webContents.send(`${globalName}-browser-dispatch`, transfer);

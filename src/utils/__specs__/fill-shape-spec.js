@@ -1,6 +1,6 @@
 import test from 'tape';
 import fillShape from '../fill-shape';
-import _ from 'lodash';
+import mapValues from 'lodash/mapValues';
 
 test('Basic functionality', (t) => {
   t.plan(3);
@@ -91,7 +91,7 @@ test('Basic functionality', (t) => {
     bool: true,
     emptyObj: true,
     teams: (teams) => {
-      return _.mapValues(teams, () => {
+      return mapValues(teams, () => {
         return { icons: true };
       });
     }

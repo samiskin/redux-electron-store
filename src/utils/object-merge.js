@@ -1,21 +1,22 @@
-import _ from 'lodash';
+import isObject from 'lodash/isObject';
+import keys from 'lodash/keys';
 
 export default function objectMerge(objA, objB) {
   let merged = {};
-  _.keys(objA).forEach((key) => {
+  keys(objA).forEach((key) => {
     let a = objA[key];
     let b = objB[key];
 
     if (a === b) {
       merged[key] = a;
-    } else if (!_.isArray(a) && !_.isArray(b) && _.isObject(a) && _.isObject(b)) {
+    } else if (!Array.isArray(a) && !Array.isArray(b) && isObject(a) && isObject(b)) {
       merged[key] = objectMerge(a, b);
     } else {
       merged[key] = b !== undefined ? b : a; // default to b if it exists
     }
   });
 
-  _.keys(objB).forEach((key) => {
+  keys(objB).forEach((key) => {
     if (objA[key] === undefined) { // fill in the rest
       merged[key] = objB[key];
     }

@@ -1,7 +1,7 @@
 import filterObject from './utils/filter-object';
 import objectMerge from './utils/object-merge';
 import fillShape from './utils/fill-shape';
-import _ from 'lodash';
+import cloneDeep from 'lodash/cloneDeep';
 
 let globalName = '__REDUX_ELECTRON_STORE__';
 
@@ -37,8 +37,8 @@ export default function electronRendererEnhancer({
       let browserStore = remote.getGlobal(globalName);
       let storeData = browserStore.getState();
       let filteredStoreData = excludeUnfilteredState ? fillShape(storeData, filter) : storeData;
-      let preload = stateTransformer(_.cloneDeep(filteredStoreData)); // Clonedeep is used as remote'd objects are handled in a unique way (breaks redux-immutable-state-invariant)
-      let newInitialState = objectMerge(initialState || reducer(undefined, {type: null}), preload);
+      let preload = stateTransformer(cloneDeep(filteredStoreData)); // Clonedeep is used as remote'd objects are handled in a unique way (breaks redux-immutable-state-invariant)
+      let newInitialState = objectMerge(initialState || reducer(undefined, { type: null }), preload);
 
       let clientId = process.guestInstanceId ? `webview ${rendererId}` : `window ${rendererId}`;
       let currentSource = sourceName || clientId;
@@ -73,10 +73,10 @@ export default function electronRendererEnhancer({
 
       // Dispatches from other processes are forwarded using this ipc message
       ipcRenderer.on(`${globalName}-browser-dispatch`, (event, { action, sourceClientId }) => {
-        action = JSON.parse(action);
+        const actionParsed = JSON.parse(action);
         if (!synchronous || sourceClientId !== clientId) {
           mainProcessUpdateFlag = true;
-          doDispatch(action);
+          doDispatch(actionParsed);
         }
       });
 
