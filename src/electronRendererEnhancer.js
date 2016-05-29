@@ -35,6 +35,10 @@ export default function electronRendererEnhancer({
 
       // Get current data from the electronEnhanced store in the browser throughthe global it creates
       let browserStore = remote.getGlobal(globalName);
+      if (!browserStore) {
+          throw new Error("Could not find electronEnhanced redux store in main process");
+      }
+
       let storeData = browserStore.getState();
       let filteredStoreData = excludeUnfilteredState ? fillShape(storeData, filter) : storeData;
       let preload = stateTransformer(cloneDeep(filteredStoreData)); // Clonedeep is used as remote'd objects are handled in a unique way (breaks redux-immutable-state-invariant)
