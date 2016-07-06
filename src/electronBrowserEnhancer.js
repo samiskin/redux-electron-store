@@ -109,6 +109,8 @@ export default function electronBrowserEnhancer({
             webContents.send(`${globalName}-browser-dispatch`, transfer);
           }
         }
+
+        return action;
       };
 
       return store;
