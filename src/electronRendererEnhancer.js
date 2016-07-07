@@ -33,7 +33,7 @@ export default function electronRendererEnhancer({
       // If this process is a webview, it will have a guestInstanceId.  Otherwise it is a window
       let rendererId = process.guestInstanceId || remote.getCurrentWindow().id;
 
-      // Get current data from the electronEnhanced store in the browser throughthe global it creates
+      // Get current data from the electronEnhanced store in the browser through the global it creates
       let browserStore = remote.getGlobal(globalName);
       if (!browserStore) {
           throw new Error("Could not find electronEnhanced redux store in main process");
