@@ -1,6 +1,7 @@
 import fillShape from './utils/fill-shape';
 import objectDifference from './utils/object-difference.js';
 import isEmpty from 'lodash/isEmpty';
+import getSubscribeFuncs from './getSubscribeFuncs.js';
 
 let globalName = '__REDUX_ELECTRON_STORE__';
 
@@ -11,7 +12,7 @@ let globalName = '__REDUX_ELECTRON_STORE__';
  * @param {Function} p.postDispatchCallback - A callback to run after a dispatch has occurred.
  * @param {Function} p.preDispatchCallback - A callback to run before an action is dispatched.
  * @param {String} p.sourceName - An override to the 'source' property appended to every action
-*/
+ */
 export default function electronBrowserEnhancer({
   postDispatchCallback: postDispatchCallback = (() => null),
   preDispatchCallback: preDispatchCallback = (() => null),
@@ -38,11 +39,17 @@ export default function electronBrowserEnhancer({
         clients[webContentsId].active = false;
       };
 
+      let isDispatching = false;
       let storeDotDispatch = store.dispatch;
       let doDispatch = (action) => {
-        preDispatchCallback(action);
-        storeDotDispatch(action);
-        postDispatchCallback(action);
+        isDispatching = true;
+        try {
+          preDispatchCallback(action);
+          storeDotDispatch(action);
+          postDispatchCallback(action);
+        } finally {
+          isDispatching = false;
+        }
       };
 
       ipcMain.on(`${globalName}-register-renderer`, ({ sender }, { filter, clientId }) => {
@@ -75,40 +82,48 @@ export default function electronBrowserEnhancer({
         senderClientId = null;
       });
 
+      // Augment the subscribe function to make the listeners happen after the action is forwarded
+      let subscribeFuncs = getSubscribeFuncs();
+      store.subscribe = (listener) => subscribeFuncs.subscribe(listener, isDispatching);
+
       store.dispatch = (action) => {
         if (!action) {
           storeDotDispatch(action);
-          return;
-        }
-        action.source = action.source || currentSource;
+        } else {
+          action.source = action.source || currentSource;
 
-        let prevState = store.getState();
-        doDispatch(action);
-        let newState = store.getState();
-        let stateDifference = objectDifference(prevState, newState);
+          let prevState = store.getState();
+          doDispatch(action);
+          let newState = store.getState();
+          let stateDifference = objectDifference(prevState, newState);
 
-        for (let webContentsId in clients) {
-          if (!clients[webContentsId].active) continue;
+          // Forward all actions to the listening renderers
+          for (let webContentsId in clients) {
+            if (!clients[webContentsId].active) continue;
 
-          let webContents = clients[webContentsId].webContents;
+            let webContents = clients[webContentsId].webContents;
 
-          if (webContents.isDestroyed() || webContents.isCrashed()) {
-            unregisterRenderer(webContentsId);
-            return;
+            if (webContents.isDestroyed() || webContents.isCrashed()) {
+              unregisterRenderer(webContentsId);
+              continue;
+            }
+
+            let shape = clients[webContentsId].filter;
+            let updated = fillShape(stateDifference.updated, shape);
+            let deleted = fillShape(stateDifference.deleted, shape);
+
+            // If any data the renderer is watching changes, send an ipc
+            // call to inform it of the updated and deleted data
+            if (!isEmpty(updated) || !isEmpty(deleted)) {
+              let payload = Object.assign({}, action, { data: { updated, deleted } });
+              let transfer = { action: JSON.stringify(payload), sourceClientId: senderClientId || currentSource };
+              webContents.send(`${globalName}-browser-dispatch`, transfer);
+            }
           }
-
-          let shape = clients[webContentsId].filter;
-          let updated = fillShape(stateDifference.updated, shape);
-          let deleted = fillShape(stateDifference.deleted, shape);
-
-          // If any data the renderer is watching changes, send an ipc
-          // call to inform it of the updated and deleted data
-          if (!isEmpty(updated) || !isEmpty(deleted)) {
-            let payload = Object.assign({}, action, { data: { updated, deleted } });
-            let transfer = { action: JSON.stringify(payload), sourceClientId: senderClientId || currentSource };
-            webContents.send(`${globalName}-browser-dispatch`, transfer);
-          }
         }
+
+        senderClientId = null;
+        subscribeFuncs.callListeners();
 
         return action;
       };

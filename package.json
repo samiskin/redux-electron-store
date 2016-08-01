@@ -1,13 +1,12 @@
 {
   "name": "redux-electron-store",
-  "version": "0.3.11",
+  "version": "0.3.12",
   "description": "Redux store which synchronizes between instances in multiple process",
   "main": "lib/index.js",
   "scripts": {
     "compile": "babel -d lib/ src/",
     "watch": "babel -d lib/ src/ --watch --sourceMaps=true",
-    "test": "tape ./lib/**/__specs__/*.js",
-    "test-watch": "onchange './src/**/*.js' -- npm test",
+    "lint": "eslint src/",
     "prepublish": "npm run compile"
   },
   "repository": {

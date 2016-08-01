@@ -2,6 +2,7 @@ import filterObject from './utils/filter-object';
 import objectMerge from './utils/object-merge';
 import fillShape from './utils/fill-shape';
 import cloneDeep from 'lodash/cloneDeep';
+import getSubscribeFuncs from './getSubscribeFuncs.js';
 
 let globalName = '__REDUX_ELECTRON_STORE__';
 
@@ -16,7 +17,7 @@ let globalName = '__REDUX_ELECTRON_STORE__';
  * @param {Function} p.postDispatchCallback - A callback to run after a dispatch has occurred.
  * @param {Function} p.preDispatchCallback - A callback to run before an action is dispatched.
  * @param {String} p.sourceName - An override to the 'source' property appended to every action
-*/
+ */
 export default function electronRendererEnhancer({
   filter: filter = true,
   excludeUnfilteredState: excludeUnfilteredState = false,
@@ -36,9 +37,11 @@ export default function electronRendererEnhancer({
       // Get current data from the electronEnhanced store in the browser through the global it creates
       let browserStore = remote.getGlobal(globalName);
       if (!browserStore) {
-          throw new Error("Could not find electronEnhanced redux store in main process");
+        throw new Error('Could not find electronEnhanced redux store in main process');
       }
 
+
+      // Prefetch initial state
       let storeData = browserStore.getState();
       let filteredStoreData = excludeUnfilteredState ? fillShape(storeData, filter) : storeData;
       let preload = stateTransformer(cloneDeep(filteredStoreData)); // Clonedeep is used as remote'd objects are handled in a unique way (breaks redux-immutable-state-invariant)
@@ -47,7 +50,10 @@ export default function electronRendererEnhancer({
       let clientId = process.guestInstanceId ? `webview ${rendererId}` : `window ${rendererId}`;
       let currentSource = sourceName || clientId;
 
+      // This flag is toggled to true when events are received
       let mainProcessUpdateFlag = false;
+
+      // Augment the reducer to handle electron enhanced actions that have been forwarded
       // Dispatches from the browser are in the format of {type, data: {updated, deleted}}.
       let parsedReducer = (state = newInitialState, action) => {
         if (mainProcessUpdateFlag) {
@@ -65,14 +71,25 @@ export default function electronRendererEnhancer({
 
       let store = storeCreator(parsedReducer, newInitialState);
 
+      let isDispatching = false;
+
+      // Augment the subscribe function to make the listeners happen after the action is forwarded
+      let subscribeFuncs = getSubscribeFuncs();
+      store.subscribe = (listener) => subscribeFuncs.subscribe(listener, isDispatching);
+
       // Renderers register themselves to the electronEnhanced store in the browser proecss
       ipcRenderer.send(`${globalName}-register-renderer`, { filter, clientId });
 
       let storeDotDispatch = store.dispatch;
       let doDispatch = (action) => {
-        preDispatchCallback(action);
-        storeDotDispatch(action);
-        postDispatchCallback(action);
+        isDispatching = true;
+        try {
+          preDispatchCallback(action);
+          storeDotDispatch(action);
+          postDispatchCallback(action);
+        } finally {
+          isDispatching = false;
+        }
       };
 
       // Dispatches from other processes are forwarded using this ipc message
@@ -81,22 +98,24 @@ export default function electronRendererEnhancer({
         if (!synchronous || sourceClientId !== clientId) {
           mainProcessUpdateFlag = true;
           doDispatch(actionParsed);
+          subscribeFuncs.callListeners();
         }
       });
 
       store.dispatch = (action) => {
         if (!action) {
           storeDotDispatch(action);
-          return;
+        } else {
+          action.source = currentSource;
+
+          if (synchronous) {
+            doDispatch(action);
+          }
+
+          ipcRenderer.send(`${globalName}-renderer-dispatch`, JSON.stringify({ action, clientId }));
         }
-        action.source = currentSource;
 
-        if (synchronous) {
-          doDispatch(action);
-        }
-
-        ipcRenderer.send(`${globalName}-renderer-dispatch`, JSON.stringify({ action, clientId }));
-
+        subscribeFuncs.callListeners();
         return action;
       };
 
