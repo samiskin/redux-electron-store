@@ -39,16 +39,19 @@ export default function electronBrowserEnhancer({
         clients[webContentsId].active = false;
       };
 
-      let isDispatching = false;
+      // This must be kept in an object to be accessed by reference
+      // by the subscribe function
+      let reduxState = {isDispatching: false};
+
       let storeDotDispatch = store.dispatch;
       let doDispatch = (action) => {
-        isDispatching = true;
+        reduxState.isDispatching = true;
         try {
           preDispatchCallback(action);
           storeDotDispatch(action);
           postDispatchCallback(action);
         } finally {
-          isDispatching = false;
+          reduxState.isDispatching = false;
         }
       };
 
@@ -84,7 +87,7 @@ export default function electronBrowserEnhancer({
 
       // Augment the subscribe function to make the listeners happen after the action is forwarded
       let subscribeFuncs = getSubscribeFuncs();
-      store.subscribe = (listener) => subscribeFuncs.subscribe(listener, isDispatching);
+      store.subscribe = (listener) => subscribeFuncs.subscribe(listener, reduxState);
 
       store.dispatch = (action) => {
         if (!action) {

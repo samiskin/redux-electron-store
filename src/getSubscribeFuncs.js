@@ -8,12 +8,12 @@ export default function getSubscribeFuncs() {
   }
 
   return {
-    subscribe: (listener, isDispatching) => {
+    subscribe: (listener, reduxState) => {
       if (typeof listener !== 'function') {
         throw new Error('Expected listener to be a function.');
       }
 
-      if (isDispatching) {
+      if (reduxState.isDispatching) {
         throw new Error('You may not call store.subscribe() while a reducer is executing');
       }
 
@@ -24,7 +24,7 @@ export default function getSubscribeFuncs() {
       return function unsubscribe() {
         if (!isSubscribed) return;
 
-        if (!isDispatching) {
+        if (reduxState.isDispatching) {
           throw new Error('You may not unsubscribe from a store listener while the reducer is executing');
         }
 

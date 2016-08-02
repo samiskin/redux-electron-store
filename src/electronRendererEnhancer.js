@@ -71,24 +71,26 @@ export default function electronRendererEnhancer({
 
       let store = storeCreator(parsedReducer, newInitialState);
 
-      let isDispatching = false;
+      // This must be kept in an object to be accessed by reference
+      // by the subscribe function
+      let reduxState = {isDispatching: false};
 
       // Augment the subscribe function to make the listeners happen after the action is forwarded
       let subscribeFuncs = getSubscribeFuncs();
-      store.subscribe = (listener) => subscribeFuncs.subscribe(listener, isDispatching);
+      store.subscribe = (listener) => subscribeFuncs.subscribe(listener, reduxState);
 
       // Renderers register themselves to the electronEnhanced store in the browser proecss
       ipcRenderer.send(`${globalName}-register-renderer`, { filter, clientId });
 
       let storeDotDispatch = store.dispatch;
       let doDispatch = (action) => {
-        isDispatching = true;
+        reduxState.isDispatching = true;
         try {
           preDispatchCallback(action);
           storeDotDispatch(action);
           postDispatchCallback(action);
         } finally {
-          isDispatching = false;
+          reduxState.isDispatching = false;
         }
       };
 
