@@ -107,6 +107,22 @@ Hot reloading of reducers needs to be done on both the renderer and the main pro
   ```
   - Note: Individual reducer files may also need to be deleted from the cache if they have been required elsewhere in the application
 
+
+## How it works
+
+#### Initialization
+1. The main process creates its store, then saves it into a global
+1. When a renderer is created, it uses `remote.getGlobal` to get the main process's state, then copies it in for its own initial state
+1. The renderer registers itself with the main process along with its "filter"
+
+#### Runtime
+1. An action occurs in either the renderer or the main process
+1. If it was in a renderer, the action is run through the reducer and forwarded to the main process
+1. The main process runs the action through the reducer
+1. The main process compares its state prior to the reduction with the new state, and with reference checks (hence the need for immutable data), it determines what data in its store changed
+1. The main process then iterates through each registered renderer. If the data that changed is described in that renderer's filter, the main process IPC's over an action with `data: { updated: {...}, deleted: {...} }` properties
+1. The renderers that receive that action will then merge in that data, thereby staying in sync with the main process, while not repeating the processing done by the reduction
+
 ### License
 
 MIT
