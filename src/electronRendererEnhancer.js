@@ -2,9 +2,9 @@ import filterObject from './utils/filter-object';
 import objectMerge from './utils/object-merge';
 import fillShape from './utils/fill-shape';
 import cloneDeep from 'lodash/cloneDeep';
-import getSubscribeFuncs from './getSubscribeFuncs.js';
+import getSubscribeFuncs from './getSubscribeFuncs';
 
-let globalName = '__REDUX_ELECTRON_STORE__';
+import { globalName } from './constants';
 
 /**
  * Creates a store enhancer which allows a redux store to synchronize its data
@@ -35,14 +35,13 @@ export default function electronRendererEnhancer({
       let rendererId = process.guestInstanceId || remote.getCurrentWindow().id;
 
       // Get current data from the electronEnhanced store in the browser through the global it creates
-      let browserStore = remote.getGlobal(globalName);
-      if (!browserStore) {
+      let getInitialState = remote.getGlobal(globalName);
+      if (!getInitialState) {
         throw new Error('Could not find electronEnhanced redux store in main process');
       }
 
-
       // Prefetch initial state
-      let storeData = browserStore.getState();
+      let storeData = JSON.parse(getInitialState());
       let filteredStoreData = excludeUnfilteredState ? fillShape(storeData, filter) : storeData;
       let preload = stateTransformer(cloneDeep(filteredStoreData)); // Clonedeep is used as remote'd objects are handled in a unique way (breaks redux-immutable-state-invariant)
       let newInitialState = objectMerge(initialState || reducer(undefined, { type: null }), preload);
@@ -73,7 +72,7 @@ export default function electronRendererEnhancer({
 
       // This must be kept in an object to be accessed by reference
       // by the subscribe function
-      let reduxState = {isDispatching: false};
+      let reduxState = { isDispatching: false };
 
       // Augment the subscribe function to make the listeners happen after the action is forwarded
       let subscribeFuncs = getSubscribeFuncs();
