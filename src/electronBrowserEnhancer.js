@@ -3,7 +3,7 @@ import objectDifference from './utils/object-difference.js';
 import isEmpty from 'lodash/isEmpty';
 import getSubscribeFuncs from './getSubscribeFuncs.js';
 
-let globalName = '__REDUX_ELECTRON_STORE__';
+import { globalName } from './constants';
 
 /**
  * Creates a store enhancer which allows a redux store to synchronize its data
@@ -23,7 +23,12 @@ export default function electronBrowserEnhancer({
       let { ipcMain } = require('electron');
 
       let store = storeCreator(reducer, initialState);
-      global[globalName] = store;
+
+      // Give renderers a way to sync the current state of the store, but be sure we don't
+      // expose any remote objects. In other words, we need to rely exclusively on primitive
+      // data types, Arrays, or Buffers. Refer to:
+      // https://github.com/electron/electron/blob/master/docs/api/remote.md#remote-objects
+      global[globalName] = () => JSON.stringify(store.getState());
 
       let clients = {}; // webContentsId -> {webContents, filter, clientId, windowId, active}
 
@@ -41,7 +46,7 @@ export default function electronBrowserEnhancer({
 
       // This must be kept in an object to be accessed by reference
       // by the subscribe function
-      let reduxState = {isDispatching: false};
+      let reduxState = { isDispatching: false };
 
       let storeDotDispatch = store.dispatch;
       let doDispatch = (action) => {
