@@ -87,7 +87,6 @@ export default function electronRendererEnhancer({
         try {
           preDispatchCallback(action);
           storeDotDispatch(action);
-          postDispatchCallback(action);
         } finally {
           reduxState.isDispatching = false;
         }
@@ -100,6 +99,7 @@ export default function electronRendererEnhancer({
           mainProcessUpdateFlag = true;
           doDispatch(actionParsed);
           subscribeFuncs.callListeners();
+          postDispatchCallback();
         }
       });
 
@@ -117,6 +117,7 @@ export default function electronRendererEnhancer({
         }
 
         subscribeFuncs.callListeners();
+        postDispatchCallback(action);
         return action;
       };
 

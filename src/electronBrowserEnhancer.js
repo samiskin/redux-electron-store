@@ -54,7 +54,6 @@ export default function electronBrowserEnhancer({
         try {
           preDispatchCallback(action);
           storeDotDispatch(action);
-          postDispatchCallback(action);
         } finally {
           reduxState.isDispatching = false;
         }
@@ -132,6 +131,7 @@ export default function electronBrowserEnhancer({
 
         senderClientId = null;
         subscribeFuncs.callListeners();
+        postDispatchCallback(action);
 
         return action;
       };
