@@ -12,10 +12,15 @@ import { globalName } from './constants';
  * @param {Function} p.postDispatchCallback - A callback to run after a dispatch has occurred.
  * @param {Function} p.preDispatchCallback - A callback to run before an action is dispatched.
  * @param {String} p.sourceName - An override to the 'source' property appended to every action
+ * @param {Function} p.dispatchProxy - In order to allow the actions dispatched by electronEnhancer
+ *                                     to pass through the entire store enhancer stack, the final
+ *                                     store.dispatch must be injected into redux-electron-store
+ *                                     manually.
  */
 export default function electronBrowserEnhancer({
   postDispatchCallback: postDispatchCallback = (() => null),
   preDispatchCallback: preDispatchCallback = (() => null),
+  dispatchProxy: dispatchProxy = null,
   sourceName: sourceName = null
 } = {}) {
   return (storeCreator) => {
@@ -82,12 +87,6 @@ export default function electronBrowserEnhancer({
       });
 
       let senderClientId = null;
-      ipcMain.on(`${globalName}-renderer-dispatch`, ({ sender }, payload) => {
-        let { action, clientId } = JSON.parse(payload);
-        senderClientId = clientId;
-        store.dispatch(action);
-        senderClientId = null;
-      });
 
       // Augment the subscribe function to make the listeners happen after the action is forwarded
       let subscribeFuncs = getSubscribeFuncs();
@@ -135,6 +134,14 @@ export default function electronBrowserEnhancer({
 
         return action;
       };
+
+      let dispatcher = dispatchProxy || store.dispatch;
+      ipcMain.on(`${globalName}-renderer-dispatch`, ({ sender }, payload) => {
+        let { action, clientId } = JSON.parse(payload);
+        senderClientId = clientId;
+        dispatcher(action);
+        senderClientId = null;
+      });
 
       return store;
     };

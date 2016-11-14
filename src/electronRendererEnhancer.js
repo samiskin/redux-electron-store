@@ -10,13 +10,23 @@ import { globalName } from './constants';
  * Creates a store enhancer which allows a redux store to synchronize its data
  * with an electronEnhanced store in the browser process.
  * @param {Object} p - The parameters to the creator
- * @param {Object|Function|true} p.filter - Describes what data should be forwarded to this process from the browser
- * @param {Boolean} p.excludeUnfilteredState - Whether to have all data not passing the filter to be undefined (Helpful to avoid bugs at the cost of performance)
- * @param {Boolean} p.synchronous - Whether dispatches from this process should be processed within this process synchronously, or await an update from the browser process
- * @param {Function} p.stateTransformer - A function that takes data from the browser store and returns an object in the proper format of the renderer's data (if you have different reducers between processes)
+ * @param {Object|Function|true} p.filter - Describes what data should be forwarded to this process
+ *                                          from the browser
+ * @param {Boolean} p.excludeUnfilteredState - Whether to have all data not passing the filter to be
+ *                                             undefined (Helpful to avoid bugs at the cost of
+ *                                             performance)
+ * @param {Boolean} p.synchronous - Whether dispatches from this process should be processed within
+ *                                  this process synchronously, or await an update from the browser process
  * @param {Function} p.postDispatchCallback - A callback to run after a dispatch has occurred.
  * @param {Function} p.preDispatchCallback - A callback to run before an action is dispatched.
+ * @param {Function} p.dispatchProxy - In order to allow the actions dispatched by electronEnhancer
+ *                                     to pass through the entire store enhancer stack, the final
+ *                                     store.dispatch must be injected into redux-electron-store
+ *                                     manually.
  * @param {String} p.sourceName - An override to the 'source' property appended to every action
+ * @param {Function} p.actionFilter - A function which takes in an action and returns a boolean
+ *                                    determining whether to forward the action to other processes
+ *                                    or not
  */
 export default function electronRendererEnhancer({
   filter: filter = true,
@@ -24,8 +34,9 @@ export default function electronRendererEnhancer({
   synchronous: synchronous = true,
   postDispatchCallback: postDispatchCallback = (() => null),
   preDispatchCallback: preDispatchCallback = (() => null),
-  stateTransformer: stateTransformer = ((state) => state),
-  sourceName: sourceName = null
+  dispatchProxy: dispatchProxy = null,
+  sourceName: sourceName = null,
+  actionFilter: actionFilter = () => true,
 } = {}) {
   return (storeCreator) => {
     return (reducer, initialState) => {
@@ -34,7 +45,7 @@ export default function electronRendererEnhancer({
       // If this process is a webview, it will have a guestInstanceId.  Otherwise it is a window
       let rendererId = process.guestInstanceId || remote.getCurrentWindow().id;
 
-      // Get current data from the electronEnhanced store in the browser through the global it creates
+      // Get data from the electronEnhanced store in the browser through the global it creates
       let getInitialState = remote.getGlobal(globalName);
       if (!getInitialState) {
         throw new Error('Could not find electronEnhanced redux store in main process');
@@ -42,9 +53,8 @@ export default function electronRendererEnhancer({
 
       // Prefetch initial state
       let storeData = JSON.parse(getInitialState());
-      let filteredStoreData = excludeUnfilteredState ? fillShape(storeData, filter) : storeData;
-      let preload = stateTransformer(cloneDeep(filteredStoreData)); // Clonedeep is used as remote'd objects are handled in a unique way (breaks redux-immutable-state-invariant)
-      let newInitialState = objectMerge(initialState || reducer(undefined, { type: null }), preload);
+      let preload = excludeUnfilteredState ? fillShape(storeData, filter) : storeData;
+      let newInitialState = objectMerge(initialState || {}, preload);
 
       let clientId = process.guestInstanceId ? `webview ${rendererId}` : `window ${rendererId}`;
       let currentSource = sourceName || clientId;
@@ -58,8 +68,6 @@ export default function electronRendererEnhancer({
         if (mainProcessUpdateFlag) {
           mainProcessUpdateFlag = false;
           let data = action.data;
-          data.deleted = stateTransformer(data.deleted);
-          data.updated = stateTransformer(data.updated);
           let filteredState = filterObject(state, data.deleted);
           return objectMerge(filteredState, data.updated);
         } else {
@@ -92,34 +100,41 @@ export default function electronRendererEnhancer({
         }
       };
 
-      // Dispatches from other processes are forwarded using this ipc message
-      ipcRenderer.on(`${globalName}-browser-dispatch`, (event, { action, sourceClientId }) => {
-        const actionParsed = JSON.parse(action);
-        if (!synchronous || sourceClientId !== clientId) {
-          mainProcessUpdateFlag = true;
-          doDispatch(actionParsed);
-          subscribeFuncs.callListeners();
-          postDispatchCallback();
-        }
-      });
-
       store.dispatch = (action) => {
-        if (!action) {
-          storeDotDispatch(action);
+        if (mainProcessUpdateFlag || !action) {
+          doDispatch(action);
         } else {
           action.source = currentSource;
 
-          if (synchronous) {
+          let shouldForwardUpdate = actionFilter(action);
+          if (!shouldForwardUpdate || synchronous) {
             doDispatch(action);
           }
 
-          ipcRenderer.send(`${globalName}-renderer-dispatch`, JSON.stringify({ action, clientId }));
+          if (shouldForwardUpdate) {
+            ipcRenderer.send(
+              `${globalName}-renderer-dispatch`,
+              JSON.stringify({ action, clientId })
+            );
+          }
         }
 
         subscribeFuncs.callListeners();
         postDispatchCallback(action);
         return action;
       };
+
+      // Dispatches from other processes are forwarded using this ipc message
+      let dispatcher = dispatchProxy || store.dispatch;
+      ipcRenderer.on(`${globalName}-browser-dispatch`, (event, { action, sourceClientId }) => {
+        const actionParsed = JSON.parse(action);
+        if (!synchronous || sourceClientId !== clientId) {
+          mainProcessUpdateFlag = true;
+          dispatcher(actionParsed);
+          subscribeFuncs.callListeners();
+          postDispatchCallback();
+        }
+      });
 
       return store;
     };

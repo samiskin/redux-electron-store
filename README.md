@@ -6,6 +6,7 @@ This library solves the problem of synchronizing [Redux](https://github.com/rack
 This library __only__ works if the data in your store is __immutable__, as objects are compared by reference to determine changes.
 
 ## Installation
+
 ```bash
 npm i redux-electron-store
 ```
@@ -21,7 +22,12 @@ import { electronEnhancer } from 'redux-electron-store';
 
 let enhancer = compose(
   applyMiddleware(...middleware),
-  electronEnhancer()
+  // Must be placed after any enhancers which dispatch
+  // their own actions such as redux-thunk or redux-saga
+  electronEnhancer({
+    // Allows synched actions to pass through all enhancers
+    dispatchProxy: a => store.dispatch(a),
+  })
 );
 
 // Note: passing enhancer as the last argument to createStore requires redux@>=3.1.0
@@ -30,7 +36,9 @@ let store = createStore(reducer, initialState, enhancer);
 
 #### Renderer / Webview Process
 
-In the renderer process, the store will handle the `filter` property in its parameter.  `filter` is a way of describing exactly what data this renderer process wishes to be notified of.  If a filter is provided, all updates which do not change a property which passes the filter will not be forwarded to the current renderer.
+In the renderer process, the store will handle a `filter` property in its parameter.  `filter` is a way of describing exactly what data this renderer process wishes to be notified of.  If a filter is provided, all updates which do not change a property which passes the filter will not be forwarded to the current renderer.
+
+
 
 ```javascript
 let filter = {
@@ -40,7 +48,10 @@ let filter = {
 
 let enhancer = compose(
   applyMiddleware(...middleware),
-  electronEnhancer({filter}),
+  electronEnhancer({
+    filter,
+    dispatchProxy: a => store.dispatch(a),
+  }),
   DevTools.instrument()
 );
 
@@ -108,20 +119,22 @@ Hot reloading of reducers needs to be done on both the renderer and the main pro
   - Note: Individual reducer files may also need to be deleted from the cache if they have been required elsewhere in the application
 
 
+
+
 ## How it works
 
 #### Initialization
 1. The main process creates its store, then saves it into a global
-1. When a renderer is created, it uses `remote.getGlobal` to get the main process's state, then copies it in for its own initial state
-1. The renderer registers itself with the main process along with its "filter"
+2. When a renderer is created, it uses `remote.getGlobal` to get the main process's state, then copies it in for its own initial state
+3. The renderer registers itself with the main process along with its "filter"
 
 #### Runtime
 1. An action occurs in either the renderer or the main process
-1. If it was in a renderer, the action is run through the reducer and forwarded to the main process
-1. The main process runs the action through the reducer
-1. The main process compares its state prior to the reduction with the new state, and with reference checks (hence the need for immutable data), it determines what data in its store changed
-1. The main process then iterates through each registered renderer. If the data that changed is described in that renderer's filter, the main process IPC's over an action with `data: { updated: {...}, deleted: {...} }` properties
-1. The renderers that receive that action will then merge in that data, thereby staying in sync with the main process, while not repeating the processing done by the reduction
+2. If it was in a renderer, the action is run through the reducer and forwarded to the main process
+3. The main process runs the action through the reducer
+4. The main process compares its state prior to the reduction with the new state, and with reference checks (hence the need for immutable data), it determines what data in its store changed
+5. The main process then iterates through each registered renderer. If the data that changed is described in that renderer's filter, the main process IPC's over an action with `data: { updated: {...}, deleted: {...} }` properties
+6. The renderers that receive that action will then merge in that data, thereby staying in sync with the main process, while not repeating the processing done by the reduction
 
 ### License
 
