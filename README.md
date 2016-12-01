@@ -8,7 +8,7 @@ This library __only__ works if the data in your store is __immutable__, as objec
 ## Installation
 
 ```bash
-npm i redux-electron-store
+npm i redux-electron-store --save
 ```
 
 ## Usage
