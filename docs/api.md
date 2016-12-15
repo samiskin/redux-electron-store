@@ -16,3 +16,4 @@ The arguments to this function are passed in as an object of `argumentName: valu
 
  - `preDispatchCallback` (_Function_): A function to be executed prior to any dispatch.
  - `postDispatchCallback` (_Function_): A function to be executed after any dispatch is made.
+ - `dispatchProxy` (_Function_): Allows actions from other processes to pass through other store enhancers such as `redux-saga` by exposing the final dispatch function of the store to the `electronEnhancer`.  This would look like `dispatchProxy: a => store.dispatch(a)`, where `store` is the result of `createStore`.
