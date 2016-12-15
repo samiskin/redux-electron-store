@@ -1,7 +1,7 @@
 # redux-electron-store
 [![npm version](https://img.shields.io/npm/v/redux-electron-store.svg?style=flat-square)](https://www.npmjs.com/package/redux-electron-store)
 
-This library solves the problem of synchronizing [Redux](https://github.com/rackt/redux/) stores in [Electron](https://github.com/atom/electron) apps. Electron is based on Chromium, and thus all Electron apps have a single [main process](https://github.com/atom/electron/blob/master/docs/tutorial/quick-start.md#differences-between-main-process-and-renderer-process) and (potentially) multiple renderer processes, one for each web page. `redux-electron-store` allows us to define a store per process, and uses [`ipc`](https://github.com/atom/electron/blob/master/docs/api/ipc-main.md) to keep them in sync in an efficient manner.  It is implemented as a [redux store enhancer](https://github.com/rackt/redux/blob/master/docs/Glossary.md#store-enhancer).
+This library solves the problem of synchronizing [Redux](https://github.com/rackt/redux/) stores in [Electron](https://github.com/atom/electron) apps. Electron is based on Chromium, and thus all Electron apps have a single [main process](https://github.com/atom/electron/blob/master/docs/tutorial/quick-start.md#differences-between-main-process-and-renderer-process) and (potentially) multiple renderer processes, one for each web page. `redux-electron-store` allows us to define a store per process, and uses [`ipc`](https://github.com/atom/electron/blob/master/docs/api/ipc-main.md) to keep them in sync.  It is implemented as a [redux store enhancer](https://github.com/rackt/redux/blob/master/docs/Glossary.md#store-enhancer).
 
 This library __only__ works if the data in your store is __immutable__, as objects are compared by reference to determine changes.
 
@@ -25,7 +25,7 @@ let enhancer = compose(
   // Must be placed after any enhancers which dispatch
   // their own actions such as redux-thunk or redux-saga
   electronEnhancer({
-    // Allows synched actions to pass through all enhancers
+    // Necessary for synched actions to pass through all enhancers
     dispatchProxy: a => store.dispatch(a),
   })
 );
@@ -36,8 +36,7 @@ let store = createStore(reducer, initialState, enhancer);
 
 #### Renderer / Webview Process
 
-In the renderer process, the store will handle a `filter` property in its parameter.  `filter` is a way of describing exactly what data this renderer process wishes to be notified of.  If a filter is provided, all updates which do not change a property which passes the filter will not be forwarded to the current renderer.
-
+In the renderer process, an important parameter to improve performance is `filter`.  `filter` is a way of describing exactly what data this renderer process wishes to be notified of.  If a filter is provided, all updates which do not change a property which passes the filter will not be forwarded to the current renderer.
 
 
 ```javascript
@@ -65,7 +64,7 @@ A filter can be an `object`, a `function`, or `true`.
 
 If the filter is `true`, the entire variable will pass through the filter.
 
-If the filter is a `function`, the function will be called with the variable the filter is acting on as a parameter, and the return value of the function must itself be a filter (either an `object` or `true`)
+If the filter is a `function`, the function will be called on every dispatch with the variable the filter is acting on as a parameter, and the return value of the function must itself be a filter (either an `object` or `true`)
 
 If the filter is an `object`, its keys must be properties of the variable the filter is acting on, and its values are themselves filters which describe the value(s) of that property that will pass through the filter.
 
@@ -124,9 +123,9 @@ Hot reloading of reducers needs to be done on both the renderer and the main pro
 ## How it works
 
 #### Initialization
-1. The main process creates its store, then saves it into a global
-2. When a renderer is created, it uses `remote.getGlobal` to get the main process's state, then copies it in for its own initial state
-3. The renderer registers itself with the main process along with its "filter"
+1. The main process creates its store
+2. When a renderer is created, it copies the current state from the main process for its own initial state
+3. The renderer then registers itself with the main process along with its "filter"
 
 #### Runtime
 1. An action occurs in either the renderer or the main process
