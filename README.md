@@ -15,7 +15,6 @@ npm i redux-electron-store --save
 
 #### Main Process
 
-
 ```javascript
 import { createStore, applyMiddleware, compose } from 'redux';
 import { electronEnhancer } from 'redux-electron-store';
@@ -36,29 +35,21 @@ let store = createStore(reducer, initialState, enhancer);
 
 #### Renderer / Webview Process
 
-In the renderer process, an important parameter to improve performance is `filter`.  `filter` is a way of describing exactly what data this renderer process wishes to be notified of.  If a filter is provided, all updates which do not change a property which passes the filter will not be forwarded to the current renderer.
-
-
 ```javascript
-let filter = {
-  notifications: true,
-  settings: true
-};
-
 let enhancer = compose(
   applyMiddleware(...middleware),
   electronEnhancer({
-    filter,
     dispatchProxy: a => store.dispatch(a),
   }),
   DevTools.instrument()
 );
 
-// Note: passing enhancer as the last argument to createStore requires redux@>=3.1.0
 let store = createStore(reducer, initialState, enhancer);
 ```
 
 #### Filters
+
+In the renderer process, an important parameter that can improve performance is `filter`.  `filter` is a way of describing exactly what data this renderer process wishes to be notified of.  If a filter is provided, all updates which do not change a property which passes the filter will not be forwarded to the current renderer.
 
 A filter can be an `object`, a `function`, or `true`.
 
