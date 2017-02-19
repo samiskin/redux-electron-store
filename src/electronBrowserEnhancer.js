@@ -11,7 +11,6 @@ import { globalName } from './constants';
  * @param {Object} p - The parameters to the creator
  * @param {Function} p.postDispatchCallback - A callback to run after a dispatch has occurred.
  * @param {Function} p.preDispatchCallback - A callback to run before an action is dispatched.
- * @param {String} p.sourceName - An override to the 'source' property appended to every action
  * @param {Function} p.dispatchProxy - In order to allow the actions dispatched by electronEnhancer
  *                                     to pass through the entire store enhancer stack, the final
  *                                     store.dispatch must be injected into redux-electron-store
@@ -21,7 +20,6 @@ export default function electronBrowserEnhancer({
   postDispatchCallback: postDispatchCallback = (() => null),
   preDispatchCallback: preDispatchCallback = (() => null),
   dispatchProxy: dispatchProxy = null,
-  sourceName: sourceName = null
 } = {}) {
   return (storeCreator) => {
     return (reducer, initialState) => {
@@ -41,7 +39,7 @@ export default function electronBrowserEnhancer({
       // webContents, and the old one must be unregistered
       let windowMap = {}; // windowId -> webContentsId
 
-      let currentSource = sourceName || 'main_process';
+      let currentSource = 'main_process';
 
       // Cannot delete data, as events could still be sent after close
       // events when a BrowserWindow is created using remote
@@ -96,8 +94,6 @@ export default function electronBrowserEnhancer({
         if (!action) {
           storeDotDispatch(action);
         } else {
-          action.source = action.source || currentSource;
-
           let prevState = store.getState();
           doDispatch(action);
           let newState = store.getState();

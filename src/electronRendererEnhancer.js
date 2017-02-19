@@ -23,7 +23,6 @@ import { globalName } from './constants';
  *                                     to pass through the entire store enhancer stack, the final
  *                                     store.dispatch must be injected into redux-electron-store
  *                                     manually.
- * @param {String} p.sourceName - An override to the 'source' property appended to every action
  * @param {Function} p.actionFilter - A function which takes in an action and returns a boolean
  *                                    determining whether to forward the action to other processes
  *                                    or not
@@ -35,7 +34,6 @@ export default function electronRendererEnhancer({
   postDispatchCallback: postDispatchCallback = (() => null),
   preDispatchCallback: preDispatchCallback = (() => null),
   dispatchProxy: dispatchProxy = null,
-  sourceName: sourceName = null,
   actionFilter: actionFilter = () => true,
 } = {}) {
   return (storeCreator) => {
@@ -57,7 +55,7 @@ export default function electronRendererEnhancer({
       let newInitialState = objectMerge(initialState || {}, preload);
 
       let clientId = process.guestInstanceId ? `webview ${rendererId}` : `window ${rendererId}`;
-      let currentSource = sourceName || clientId;
+      let currentSource = clientId;
 
       // This flag is toggled to true when events are received
       let mainProcessUpdateFlag = false;
@@ -104,8 +102,6 @@ export default function electronRendererEnhancer({
         if (mainProcessUpdateFlag || !action) {
           doDispatch(action);
         } else {
-          action.source = currentSource;
-
           let shouldForwardUpdate = actionFilter(action);
           if (!shouldForwardUpdate || synchronous) {
             doDispatch(action);
