@@ -1,6 +1,7 @@
 const { ipcRenderer, remote } = require('electron');
 const { globalName } = require('./constants');
 const objectMerge = require('./utils/object-merge');
+const fillShape = require('./utils/fill-shape');
 const setupStore = require('./setup-electron-store');
 
 /**
@@ -29,7 +30,7 @@ const defaultParams = {
   preDispatchCallback: () => null,
   dispatchProxy: null,
   actionFilter: () => true,
-}
+};
 module.exports = overrides => storeCreator => (reducer, providedInitialState) => {
   const params = Object.assign({}, defaultParams, overrides);
 
@@ -43,7 +44,7 @@ module.exports = overrides => storeCreator => (reducer, providedInitialState) =>
   let getInitialState = remote.getGlobal(globalName);
   if (!getInitialState) throw new Error('Could not find electronEnhanced redux store in main process');
   const storeData = JSON.parse(getInitialState());
-  const preload = params.excludeUnfilteredState ? fillShape(storeData, filter) : storeData;
+  const preload = params.excludeUnfilteredState ? fillShape(storeData, params.filter) : storeData;
   const initialState = objectMerge(providedInitialState || {}, preload);
 
   // Forward update to the main process so that it can forward the update to all other renderers
@@ -74,4 +75,4 @@ module.exports = overrides => storeCreator => (reducer, providedInitialState) =>
   });
 
   return store;
-}
+};

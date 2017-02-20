@@ -1,7 +1,6 @@
 // {params, flags, storeCreator, reducer, initialState, forwarder}
 const { ipcMain } = require('electron');
 const { globalName } = require('./constants');
-const objectMerge = require('./utils/object-merge');
 const fillShape = require('./utils/fill-shape');
 const setupStore = require('./setup-electron-store');
 const isEmpty = require('lodash/isEmpty');
@@ -22,7 +21,7 @@ const defaultParams = {
   preDispatchCallback: () => null,
   dispatchProxy: null,
   actionFilter: () => true,
-}
+};
 module.exports = overrides => storeCreator => (reducer, initialState) => {
   const params = Object.assign({}, defaultParams, overrides);
 
@@ -32,12 +31,10 @@ module.exports = overrides => storeCreator => (reducer, initialState) => {
   // webContents, and the old one must be unregistered
   let windowMap = {}; // windowId -> webContentsId
 
-  let currentSource = 'main_process';
-
   // Cannot delete data, as events could still be sent after close
   // events when a BrowserWindow is created using remote
   let unregisterRenderer = (webContentsId) => {
-    clients[webContentsId] = {active: false};
+    clients[webContentsId] = { active: false };
   };
 
   ipcMain.on(`${globalName}-register-renderer`, ({ sender }, { filter, clientId }) => {
@@ -62,7 +59,7 @@ module.exports = overrides => storeCreator => (reducer, initialState) => {
     }
   });
 
-  const forwarder = ({type, payload}) => {
+  const forwarder = ({ type, payload }) => {
     // Forward all actions to the listening renderers
     for (let webContentsId in clients) {
       if (!clients[webContentsId].active) continue;
@@ -79,13 +76,14 @@ module.exports = overrides => storeCreator => (reducer, initialState) => {
       let updated = fillShape(payload.updated, shape);
       let deleted = fillShape(payload.deleted, shape);
 
-      if (isEmpty(updated) && isEmpty(deleted))
+      if (isEmpty(updated) && isEmpty(deleted)) {
         continue;
+      }
 
-      const action = {type, payload: {updated, deleted}};
+      const action = { type, payload: { updated, deleted } };
       webContents.send(`${globalName}-browser-dispatch`, JSON.stringify(action));
     }
-  }
+  };
 
   const context = {
     params,
@@ -119,4 +117,4 @@ module.exports = overrides => storeCreator => (reducer, initialState) => {
   });
 
   return store;
-}
+};

@@ -25,4 +25,4 @@ module.exports = function filterObject(source, filter) {
     }
   });
   return filtered;
-}
+};

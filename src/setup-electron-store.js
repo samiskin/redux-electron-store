@@ -3,7 +3,6 @@ const filterObject = require('./utils/filter-object');
 const objectMerge = require('./utils/object-merge');
 const objectDifference = require('./utils/object-difference');
 const fillShape = require('./utils/fill-shape');
-const cloneDeep = require('lodash/cloneDeep');
 
 function getSubscribeFuncs() {
   let currentListeners = [];
@@ -47,22 +46,21 @@ function getSubscribeFuncs() {
   };
 }
 
-
-module.exports = ({params, flags, storeCreator, reducer, initialState, forwarder}) => {
+module.exports = ({ params, flags, storeCreator, reducer, initialState, forwarder }) => {
   const parsedReducer = (state, action) => {
     if (flags.isUpdating) {
       flags.isUpdating = false;
-      const {updated, deleted} = action.payload;
+      const { updated, deleted } = action.payload;
       const withDeletions = filterObject(state, deleted);
       return objectMerge(withDeletions, updated);
     } else {
       const reduced = reducer(state, action);
-      return params.excludeUnfilteredState ? fillShape(reduced, filter) : reduced;
+      return params.excludeUnfilteredState ? fillShape(reduced, params.filter) : reduced;
     }
-  }
+  };
 
   const store = storeCreator(parsedReducer, initialState);
-  const {subscribe, callListeners} = getSubscribeFuncs();
+  const { subscribe, callListeners } = getSubscribeFuncs();
   store.subscribe = listener => subscribe(flags, listener);
 
   const storeDotDispatch = store.dispatch;
@@ -74,30 +72,30 @@ module.exports = ({params, flags, storeCreator, reducer, initialState, forwarder
     } finally {
       flags.isDispatching = false;
     }
-  }
+  };
 
   store.dispatch = (action) => {
     if (flags.isUpdating || !action || !params.actionFilter(action)) {
       doDispatch(action);
-      if (flags.forwardOnUpdate)
+      if (flags.forwardOnUpdate) {
         forwarder(action);
+      }
     } else {
       const prevState = store.getState();
       doDispatch(action);
       const newState = store.getState();
       const delta = objectDifference(prevState, newState);
 
-      if (isEmpty(delta.updated) && isEmpty(delta.deleted))
-        return;
-
+      if (isEmpty(delta.updated) && isEmpty(delta.deleted)) {
+        return action;
+      }
       forwarder({ type: action.type, payload: delta });
     }
 
     callListeners();
     params.postDispatchCallback(action);
     return action;
-  }
+  };
 
   return store;
-}
-
+};

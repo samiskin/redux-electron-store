@@ -51,4 +51,4 @@ module.exports = function fillShape(source, sink) {
     }
   });
   return filledObject;
-}
+};

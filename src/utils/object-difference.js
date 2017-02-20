@@ -31,5 +31,5 @@ module.exports = function objectDifference(old, curr) {
   keys(old)
     .forEach(key => curr[key] === undefined && (deleted[key] = true));
 
-  return { updated, deleted }
-}
+  return { updated, deleted };
+};
