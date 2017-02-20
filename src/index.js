@@ -1,8 +1,8 @@
 let storeEnhancer = null;
 if (process.type === 'browser') {
-  storeEnhancer = require('./electronBrowserEnhancer').default;
+  storeEnhancer = require('./main-enhancer');
 } else {
-  storeEnhancer = require('./renderer-enhancer').default;
+  storeEnhancer = require('./renderer-enhancer');
 }
 
 module.exports = {

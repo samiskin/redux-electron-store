@@ -1,7 +1,7 @@
-import isObject from 'lodash/isObject';
-import keys from 'lodash/keys';
+const isObject = require('lodash/isObject');
+const isEmpty = require('lodash/isEmpty');
 
-export default function objectMerge(objA, objB) {
+module.exports = function objectMerge(objA, objB) {
   let merged = {};
   keys(objA).forEach((key) => {
     let a = objA[key];

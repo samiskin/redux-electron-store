@@ -1,1 +1,3 @@
-export const globalName = '__REDUX_ELECTRON_STORE__';
+module.exports = {
+  globalName: '__REDUX_ELECTRON_STORE__',
+};

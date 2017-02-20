@@ -1,34 +1,33 @@
 /*
-Source: The source of the data, containing all the information to fill the sink with
-Sink: The shape of the data to be filled, describing the desired objects by giving
-      each desired key a value of true
+  Source: The source of the data, containing all the information to fill the sink with
+  Sink: The shape of the data to be filled, describing the desired objects by giving
+        each desired key a value of true
 
-Returns: An object with the same shape as the sink, filled with values from the source
-Ex:
-Source: {                              Sink {
-  teams: {                              teams: {
-    '1': {                                '1': {
-      name: 'The A Team',                   name: true
-      rating: 5                           },
-    },                                    '2': true
-    '2': {                              }
-      name: 'The B Team',             }
-      rating: 3
-}}}
+  Returns: An object with the same shape as the sink, filled with values from the source
+  Ex:
+  Source: {                              Sink {
+    teams: {                              teams: {
+      '1': {                                '1': {
+        name: 'The A Team',                   name: true
+        rating: 5                           },
+      },                                    '2': true
+      '2': {                              }
+        name: 'The B Team',             }
+        rating: 3
+  }}}
 
-Will return:
-{
-  teams: {
-    '1': { name: 'The A Team' }
-    '2': { name: 'The A Team', rating: 3 }
+  Will return:
+  {
+    teams: {
+      '1': { name: 'The A Team' }
+      '2': { name: 'The A Team', rating: 3 }
+    }
   }
-}
 */
 
-import keys from 'lodash/keys';
+const keys = require('lodash/keys');
 
-
-export default function fillShape(source, sink) {
+module.exports = function fillShape(source, sink) {
   if (typeof sink === 'function') {
     sink = sink(source); //eslint-disable-line
   }

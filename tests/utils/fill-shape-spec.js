@@ -1,6 +1,6 @@
-import test from 'tape';
-import fillShape from '../fill-shape';
-import mapValues from 'lodash/mapValues';
+const test = require('tape');
+const fillShape = require('../../src/utils/fill-shape');
+const mapValues = require('lodash/mapValues');
 
 test('Basic functionality', (t) => {
   t.plan(3);

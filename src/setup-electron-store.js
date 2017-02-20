@@ -1,8 +1,9 @@
 const isEmpty = require('lodash/isEmpty');
-const filterObject = require('./utils/filter-object').default;
-const objectMerge = require('./utils/object-merge').default;
-const fillShape = require('./utils/fill-shape').default;
-const cloneDeep = require('lodash/cloneDeep').default;
+const filterObject = require('./utils/filter-object');
+const objectMerge = require('./utils/object-merge');
+const objectDifference = require('./utils/object-difference');
+const fillShape = require('./utils/fill-shape');
+const cloneDeep = require('lodash/cloneDeep');
 
 function getSubscribeFuncs() {
   let currentListeners = [];
@@ -51,8 +52,7 @@ module.exports = ({params, flags, storeCreator, reducer, initialState, forwarder
   const parsedReducer = (state, action) => {
     if (flags.isUpdating) {
       flags.isUpdating = false;
-      console.log(action);
-      const {updated, deleted} = action.data;
+      const {updated, deleted} = action.payload;
       const withDeletions = filterObject(state, deleted);
       return objectMerge(withDeletions, updated);
     } else {
@@ -77,23 +77,20 @@ module.exports = ({params, flags, storeCreator, reducer, initialState, forwarder
   }
 
   store.dispatch = (action) => {
-    if (flags.isUpdating || !action) {
+    if (flags.isUpdating || !action || !params.actionFilter(action)) {
       doDispatch(action);
-    } else {
-      if (!params.actionFilter(action)) {
-        doDispatch(action);
-      } else {
-        // const prevState = store.getState();
-        // doDispatch(action);
-        // const newState = store.getState();
-        // const delta = objectDifference(prevState, newState);
-
-        // if (isEmpty(delta.updated) && isEmpty(delta.deleted))
-        //   return;
-
-        // const action = { type: action.type, payload: delta };
+      if (flags.forwardOnUpdate)
         forwarder(action);
-      }
+    } else {
+      const prevState = store.getState();
+      doDispatch(action);
+      const newState = store.getState();
+      const delta = objectDifference(prevState, newState);
+
+      if (isEmpty(delta.updated) && isEmpty(delta.deleted))
+        return;
+
+      forwarder({ type: action.type, payload: delta });
     }
 
     callListeners();

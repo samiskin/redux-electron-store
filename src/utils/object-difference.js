@@ -8,10 +8,10 @@
     {updated: {b: 2}, deleted: {a: true}}
 */
 
-import isObject from 'lodash/isObject';
-import isEmpty from 'lodash/isEmpty';
+const isObject = require('lodash/isObject');
+const isEmpty = require('lodash/isEmpty');
 
-export default function objectDifference(oldValue, newValue) {
+module.exports = function objectDifference(oldValue, newValue) {
   let updated = {};
   let deleted = {};
 
