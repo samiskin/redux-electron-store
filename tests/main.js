@@ -1,10 +1,13 @@
-import {app, ipcMain, BrowserWindow, screen} from 'electron';
-import * as url from 'url';
-import * as path from 'path';
+const {app, ipcMain, BrowserWindow} = require('electron');
+const url = require('url');
+const path = require('path');
 
 const store = require('./store');
 
 app.on('ready', () => {
+
+  const screen = require('electron').screen;
+
   const loadFileUrl = (wnd, params = {}) => {
     let targetUrl = url.format({
       protocol: 'file',

@@ -31,7 +31,7 @@ const defaultParams = {
   actionFilter: () => true,
 }
 module.exports = overrides => storeCreator => (reducer, providedInitialState) => {
-  const params = Object.assign({}, defaultParams, params);
+  const params = Object.assign({}, defaultParams, overrides);
 
   const rendererId = process.guestInstanceId || remote.getCurrentWindow().id;
   const clientId = process.guestInstanceId ? `webview ${rendererId}` : `window ${rendererId}`;

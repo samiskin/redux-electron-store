@@ -24,7 +24,7 @@ const defaultParams = {
   actionFilter: () => true,
 }
 module.exports = overrides => storeCreator => (reducer, initialState) => {
-  const params = Object.assign({}, defaultParams, params);
+  const params = Object.assign({}, defaultParams, overrides);
 
   let clients = {}; // webContentsId -> {webContents, filter, clientId, windowId, active}
 
@@ -80,7 +80,7 @@ module.exports = overrides => storeCreator => (reducer, initialState) => {
       let deleted = fillShape(payload.deleted, shape);
 
       if (isEmpty(updated) && isEmpty(deleted))
-        return;
+        continue;
 
       const action = {type, payload: {updated, deleted}};
       webContents.send(`${globalName}-browser-dispatch`, JSON.stringify(action));

@@ -11,6 +11,7 @@
   </body>
 
   <script>
+    window.rendererId = process.guestInstanceId || JSON.parse(url.parse(window.location.href, true).query.windowParams).id;
     require('./renderer.js')
   </script>
 </html>

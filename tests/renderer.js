@@ -2,12 +2,9 @@
 // be executed in the renderer process for that window.
 // All of the Node.js APIs are available in this process.
 
-import { ipcRenderer } from 'electron';
-import * as url from 'url';
+const { ipcRenderer } = require('electron');
 
 const store = require('./store');
-const id = process.guestInstanceId || JSON.parse(url.parse(window.location.href, true).query.windowParams).id;
-store.subscribe(() => ipcRenderer.send('renderer-store-update', id, store.getState()));
 
 const button = document.createElement('button');
 button.textContent = 'INCREMENT';
