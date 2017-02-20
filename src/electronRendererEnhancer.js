@@ -127,8 +127,6 @@ export default function electronRendererEnhancer({
         if (!synchronous || sourceClientId !== clientId) {
           mainProcessUpdateFlag = true;
           dispatcher(actionParsed);
-          subscribeFuncs.callListeners();
-          postDispatchCallback();
         }
       });
 
