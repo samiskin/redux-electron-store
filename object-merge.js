@@ -1,10 +1,9 @@
-const isObject = require('lodash/isObject');
-const isEmpty = require('lodash/isEmpty');
-const keys = require('lodash/keys');
+import isObject from 'lodash/isObject';
+import keys from 'lodash/keys';
 
 const isShallow = (val) => Array.isArray(val) || !isObject(val);
 
-module.exports = function objectMerge(a, b) {
+export default function objectMerge(a, b) {
   if (a === b || isShallow(a) || isShallow(b))
     return b !== undefined ? b : a;
 
