@@ -7,7 +7,6 @@ const counter = (state, action) => {
 
 const opts = {}
 if (process.type === 'renderer') {
-  const url = require('url');
   if (window.rendererId === 1)
     opts.filter = { counter: true }
 }
