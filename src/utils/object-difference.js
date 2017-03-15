@@ -8,36 +8,28 @@
     {updated: {b: 2}, deleted: {a: true}}
 */
 
-import isObject from 'lodash/isObject';
-import isEmpty from 'lodash/isEmpty';
+const isObject = require('lodash/isObject');
+const isEmpty = require('lodash/isEmpty');
+const keys = require('lodash/keys');
 
-export default function objectDifference(oldValue, newValue) {
-  let updated = {};
-  let deleted = {};
+const isShallow = val => Array.isArray(val) || !isObject(val);
 
-  Object.keys(newValue).forEach((key) => {
-    if (oldValue[key] === newValue[key]) return;
+module.exports = function objectDifference(old, curr) {
+  const updated = {};
+  const deleted = {};
 
-    // If there is a difference in the variables, check if they are an actual
-    // javascript object (not an array, which typeof says is object).  If they
-    // are an object, check for differences in the objects and update our
-    // diffs if there is anything there.  If it isn't an object, then it is either
-    // a changed value or a new value, therefore add it to the updated object
-    if (isObject(oldValue[key]) && isObject(newValue[key]) &&
-      !Array.isArray(oldValue[key]) && !Array.isArray(newValue[key])) {
-      let deep = objectDifference(oldValue[key], newValue[key]);
-      if (!isEmpty(deep.updated)) updated[key] = deep.updated;
-      if (!isEmpty(deep.deleted)) deleted[key] = deep.deleted;
+  keys(curr).forEach(key => {
+    if (isShallow(curr[key]) || isShallow(old[key])) {
+      updated[key] = curr[key];
     } else {
-      updated[key] = newValue[key];
+      const diff = objectDifference(old[key], curr[key]);
+      !isEmpty(diff.updated) && (updated[key] = diff.updated);
+      !isEmpty(diff.deleted) && (deleted[key] = diff.deleted);
     }
   });
 
-  // Any keys in the old object that aren't in the new one must have been deleted
-  Object.keys(oldValue).forEach((key) => {
-    if (newValue[key] !== undefined) return;
-    deleted[key] = true;
-  });
+  keys(old)
+    .forEach(key => curr[key] === undefined && (deleted[key] = true));
 
   return { updated, deleted };
-}
+};

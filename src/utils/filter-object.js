@@ -1,13 +1,18 @@
-import keys from 'lodash/keys';
-import isObject from 'lodash/isObject';
+/*
+  Given an source object and a filter shape, remove all leaf elements in the shape
+  from the source.
 
-// Given an source object and a filter shape, remove all leaf elements in the shape
-// from the source.  Example:
-// filterObject({'a': 1, 'b':{'c': {}}}, {'b': {'c': true}})
-//   will return {'a': 1, 'b': {}}.
-// The value of the leaf elment has to be true to be ignored
-// (To ensure all uses of this function look the same)
-export default function filterObject(source, filter) {
+  Example:
+  filterObject({'a': 1, 'b':{'c': {}}}, {'b': {'c': true}})
+  will return {'a': 1, 'b': {}}.
+
+  The value of the leaf elment has to be true to be ignored
+*/
+
+const keys = require('lodash/keys');
+const isObject = require('lodash/isObject');
+
+module.exports = function filterObject(source, filter) {
   if (!source || filter === true) return {};
   let filtered = {};
   keys(source).forEach((key) => {
@@ -20,4 +25,4 @@ export default function filterObject(source, filter) {
     }
   });
   return filtered;
-}
+};
