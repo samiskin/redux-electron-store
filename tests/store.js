@@ -1,5 +1,5 @@
 const { createStore } = require('redux');
-const { electronEnhancer } = require('../src');
+const { electronEnhancer } = require('../cov');
 
 const counter = (state, action) => {
   return action.type === 'INCREMENT' ? {count: state.count + action.payload} : state;

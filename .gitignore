@@ -3,3 +3,6 @@
 /lib/
 
 *.log
+tests/coverage
+coverage
+cov

@@ -4,7 +4,9 @@
   "description": "Redux store which synchronizes between instances in multiple process",
   "main": "src/index.js",
   "scripts": {
-    "lint": "eslint src/"
+    "lint": "eslint src/",
+    "pretest": "istanbul instrument src --output cov --no-compact --complete-copy --es-modules",
+    "test": "electron ./tests/main.js"
   },
   "repository": {
     "type": "git",
@@ -28,11 +30,15 @@
     "lodash": "^4.13.1"
   },
   "devDependencies": {
+    "blue-tape": "^1.0.0",
     "electron": "^1.4.15",
+    "electron-mocha": "^3.3.0",
     "eslint": "^1.10.3",
     "eslint-config-airbnb": "^2.1.1",
     "eslint-plugin-react": "^5.1.1",
+    "istanbul": "^1.1.0-alpha.1",
     "redux": "^3.6.0",
-    "tape": "^4.2.2"
+    "tap-colorize": "^1.2.0",
+    "tape": "^4.6.3"
   }
 }

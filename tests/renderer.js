@@ -2,7 +2,9 @@
 // be executed in the renderer process for that window.
 // All of the Node.js APIs are available in this process.
 
-const { ipcRenderer } = require('electron');
+const { ipcRenderer, remote } = require('electron');
+
+try {
 
 const store = require('./store');
 
@@ -23,3 +25,12 @@ if (!process.guestInstanceId) {
     webview.removeEventListener('dom-ready', listener);
   });
 }
+
+window.onbeforeunload = (e) => ipcRenderer.send('renderer-coverage', window.__coverage__);
+
+
+} catch(e) {
+  ipcRenderer.send('renderer-error', e.message);
+}
+
+

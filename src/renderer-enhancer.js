@@ -42,7 +42,7 @@ module.exports = overrides => storeCreator => (reducer, providedInitialState) =>
 
   // Get current from the electronEnhanced store in the browser through the global it creates
   let getInitialState = remote.getGlobal(globalName);
-  if (!getInitialState) throw new Error('Could not find electronEnhanced redux store in main process');
+  if (!getInitialState) throw new Error('redux-electron-store: Could not find electronEnhanced redux store in main process');
   const storeData = JSON.parse(getInitialState());
   const preload = params.excludeUnfilteredState ? fillShape(storeData, params.filter) : storeData;
   const initialState = objectMerge(providedInitialState || {}, preload);
