@@ -45,7 +45,7 @@ module.exports = overrides => storeCreator => (reducer, providedInitialState) =>
   if (!getInitialState) throw new Error('Could not find electronEnhanced redux store in main process');
   const storeData = JSON.parse(getInitialState());
   const preload = params.excludeUnfilteredState ? fillShape(storeData, params.filter) : storeData;
-  const initialState = objectMerge(providedInitialState || {}, preload);
+  const initialState = objectMerge(preload, providedInitialState || {});
 
   // Forward update to the main process so that it can forward the update to all other renderers
   const forwarder = (action) =>
