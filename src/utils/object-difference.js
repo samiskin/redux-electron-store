@@ -8,9 +8,9 @@
     {updated: {b: 2}, deleted: {a: true}}
 */
 
-const isObject = require("lodash/isObject");
-const isEmpty = require("lodash/isEmpty");
-const keys = require("lodash/keys");
+const isObject = require('lodash/isObject');
+const isEmpty = require('lodash/isEmpty');
+const keys = require('lodash/keys');
 
 const isShallow = val => Array.isArray(val) || !isObject(val);
 
