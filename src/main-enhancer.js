@@ -20,7 +20,7 @@ const defaultParams = {
   postDispatchCallback: () => null,
   preDispatchCallback: () => null,
   dispatchProxy: null,
-  actionFilter: () => true,
+  actionFilter: () => true
 };
 module.exports = overrides => storeCreator => (reducer, initialState) => {
   const params = Object.assign({}, defaultParams, overrides);
@@ -33,12 +33,21 @@ module.exports = overrides => storeCreator => (reducer, initialState) => {
 
   // Cannot delete data, as events could still be sent after close
   // events when a BrowserWindow is created using remote
-  let unregisterRenderer = (webContentsId) => {
+  let unregisterRenderer = webContentsId => {
     clients[webContentsId] = { active: false };
   };
 
   ipcMain.on(`${globalName}-register-renderer`, ({ sender }, { filter, clientId }) => {
     let webContentsId = sender.getId();
+
+    // if webviews are reloaded, the contents id changes
+    // so duplicates need to be removed
+    Object.keys(clients).forEach(k => {
+      if (clients[k].webContents === sender) {
+        delete clients[k];
+      }
+    });
+
     clients[webContentsId] = {
       webContents: sender,
       filter,
@@ -47,9 +56,11 @@ module.exports = overrides => storeCreator => (reducer, initialState) => {
       active: true
     };
 
-    if (!sender.isGuest()) { // For windowMap (not webviews)
+    if (!sender.isGuest()) {
+      // For windowMap (not webviews)
       let browserWindow = sender.getOwnerBrowserWindow();
-      if (windowMap[browserWindow.id] !== undefined) { // Occurs on window reload
+      if (windowMap[browserWindow.id] !== undefined) {
+        // Occurs on window reload
         unregisterRenderer(windowMap[browserWindow.id]);
       }
       windowMap[browserWindow.id] = webContentsId;
@@ -91,12 +102,12 @@ module.exports = overrides => storeCreator => (reducer, initialState) => {
       isDispatching: false,
       isUpdating: false,
       forwardOnUpdate: true,
-      senderClientId: null,
+      senderClientId: null
     },
     storeCreator,
     reducer,
     initialState,
-    forwarder,
+    forwarder
   };
 
   const store = setupStore(context);
