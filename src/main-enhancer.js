@@ -38,7 +38,7 @@ module.exports = overrides => storeCreator => (reducer, initialState) => {
   };
 
   ipcMain.on(`${globalName}-register-renderer`, ({ sender }, { filter, clientId }) => {
-    let webContentsId = sender.getId();
+    let webContentsId = sender.id;
     clients[webContentsId] = {
       webContents: sender,
       filter,
