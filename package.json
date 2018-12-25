@@ -1,6 +1,6 @@
 {
   "name": "redux-electron-store",
-  "version": "0.6.3",
+  "version": "0.6.4",
   "description": "Redux store which synchronizes between instances in multiple process",
   "main": "src/index.js",
   "scripts": {
