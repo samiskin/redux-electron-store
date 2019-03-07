@@ -52,7 +52,7 @@ module.exports = overrides => storeCreator => (reducer, initialState) => {
       webContents: sender,
       filter,
       clientId,
-      windowId: sender.getOwnerBrowserWindow().id,
+      //windowId: sender.getOwnerBrowserWindow().id,
       active: true
     };
 
