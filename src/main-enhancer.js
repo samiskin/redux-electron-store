@@ -1,9 +1,9 @@
 // {params, flags, storeCreator, reducer, initialState, forwarder}
-const { ipcMain } = require('electron');
-const { globalName } = require('./constants');
-const fillShape = require('./utils/fill-shape');
-const setupStore = require('./setup-electron-store');
-const isEmpty = require('lodash/isEmpty');
+const { ipcMain } = require('electron')
+const { globalName } = require('./constants')
+const fillShape = require('./utils/fill-shape')
+const setupStore = require('./setup-electron-store')
+const isEmpty = require('lodash/isEmpty')
 
 /**
  * Creates a store enhancer which allows a redux store to synchronize its data
@@ -21,80 +21,84 @@ const defaultParams = {
   preDispatchCallback: () => null,
   dispatchProxy: null,
   actionFilter: () => true
-};
+}
 module.exports = overrides => storeCreator => (reducer, initialState) => {
-  const params = Object.assign({}, defaultParams, overrides);
+  const params = Object.assign({}, defaultParams, overrides)
 
-  let clients = {}; // webContentsId -> {webContents, filter, clientId, windowId, active}
+  let clients = {} // webContentsId -> {webContents, filter, clientId, windowId, active}
 
   // Need to keep track of windows, as when a window refreshes it creates a new
   // webContents, and the old one must be unregistered
-  let windowMap = {}; // windowId -> webContentsId
+  let windowMap = {} // windowId -> webContentsId
 
   // Cannot delete data, as events could still be sent after close
   // events when a BrowserWindow is created using remote
   let unregisterRenderer = webContentsId => {
-    clients[webContentsId] = { active: false };
-  };
+    clients[webContentsId] = { active: false }
+  }
 
-  ipcMain.on(`${globalName}-register-renderer`, ({ sender }, { filter, clientId }) => {
-    let webContentsId = sender.id;
+  ipcMain.on(
+    `${globalName}-register-renderer`,
+    ({ sender }, { filter, clientId }) => {
+      let webContentsId = sender.id
 
-    // if webviews are reloaded, the contents id changes
-    // so duplicates need to be removed
-    Object.keys(clients).forEach(k => {
-      if (clients[k].webContents === sender) {
-        delete clients[k];
+      // if webviews are reloaded, the contents id changes
+      // so duplicates need to be removed
+      Object.keys(clients).forEach(k => {
+        if (clients[k].webContents === sender) {
+          delete clients[k]
+        }
+      })
+
+      clients[webContentsId] = {
+        webContents: sender,
+        filter,
+        clientId: webContentsId,
+        //windowId: sender.getOwnerBrowserWindow().id,
+        active: true
       }
-    });
 
-    clients[webContentsId] = {
-      webContents: sender,
-      filter,
-      clientId,
-      //windowId: sender.getOwnerBrowserWindow().id,
-      active: true
-    };
+      if (!sender.isGuest()) {
+        // For windowMap (not webviews)
+        let browserWindow = sender.getOwnerBrowserWindow()
+        if (windowMap[browserWindow.id] !== undefined) {
+          // Occurs on window reload
+          unregisterRenderer(windowMap[browserWindow.id])
+        }
+        windowMap[browserWindow.id] = webContentsId
 
-    if (!sender.isGuest()) {
-      // For windowMap (not webviews)
-      let browserWindow = sender.getOwnerBrowserWindow();
-      if (windowMap[browserWindow.id] !== undefined) {
-        // Occurs on window reload
-        unregisterRenderer(windowMap[browserWindow.id]);
+        // Webcontents aren't automatically destroyed on window close
+        browserWindow.on('closed', () => unregisterRenderer(webContentsId))
       }
-      windowMap[browserWindow.id] = webContentsId;
-
-      // Webcontents aren't automatically destroyed on window close
-      browserWindow.on('closed', () => unregisterRenderer(webContentsId));
     }
-  });
+  )
 
   const forwarder = ({ type, payload }) => {
     // Forward all actions to the listening renderers
     for (let webContentsId in clients) {
-      if (!clients[webContentsId].active) continue;
-      if (clients[webContentsId].clientId === context.flags.senderClientId) continue;
+      if (!clients[webContentsId].active) continue
+      if (clients[webContentsId].clientId === context.flags.senderClientId)
+        continue
 
-      let webContents = clients[webContentsId].webContents;
+      let webContents = clients[webContentsId].webContents
 
       if (webContents.isDestroyed() || webContents.isCrashed()) {
-        unregisterRenderer(webContentsId);
-        continue;
+        unregisterRenderer(webContentsId)
+        continue
       }
 
-      let shape = clients[webContentsId].filter;
-      let updated = fillShape(payload.updated, shape);
-      let deleted = fillShape(payload.deleted, shape);
+      let shape = clients[webContentsId].filter
+      let updated = fillShape(payload.updated, shape)
+      let deleted = fillShape(payload.deleted, shape)
 
       if (isEmpty(updated) && isEmpty(deleted)) {
-        continue;
+        continue
       }
 
-      const action = { type, payload: { updated, deleted } };
-      webContents.send(`${globalName}-browser-dispatch`, JSON.stringify(action));
+      const action = { type, payload: { updated, deleted } }
+      webContents.send(`${globalName}-browser-dispatch`, JSON.stringify(action))
     }
-  };
+  }
 
   const context = {
     params,
@@ -108,24 +112,27 @@ module.exports = overrides => storeCreator => (reducer, initialState) => {
     reducer,
     initialState,
     forwarder
-  };
+  }
 
-  const store = setupStore(context);
+  const store = setupStore(context)
 
   // Give renderers a way to sync the current state of the store, but be sure we don't
   // expose any remote objects. In other words, we need to rely exclusively on primitive
   // data types, Arrays, or Buffers. Refer to:
   // https://github.com/electron/electron/blob/master/docs/api/remote.md#remote-objects
-  global[globalName] = () => JSON.stringify(store.getState());
+  global[globalName] = () => JSON.stringify(store.getState())
 
-  const dispatcher = params.dispatchProxy || store.dispatch;
-  ipcMain.on(`${globalName}-renderer-dispatch`, (event, clientId, stringifiedAction) => {
-    context.flags.isUpdating = true;
-    const action = JSON.parse(stringifiedAction);
-    context.flags.senderClientId = clientId;
-    dispatcher(action);
-    context.flags.senderClientId = null;
-  });
+  const dispatcher = params.dispatchProxy || store.dispatch
+  ipcMain.on(
+    `${globalName}-renderer-dispatch`,
+    (event, clientId, stringifiedAction) => {
+      context.flags.isUpdating = true
+      const action = JSON.parse(stringifiedAction)
+      context.flags.senderClientId = event.sender.id
+      dispatcher(action)
+      context.flags.senderClientId = null
+    }
+  )
 
-  return store;
-};
+  return store
+}
