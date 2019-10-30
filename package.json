@@ -29,7 +29,7 @@
   },
   "devDependencies": {
     "electron": "^4.0.0",
-    "eslint": "^1.10.3",
+    "eslint": "^6.6.0",
     "eslint-config-airbnb": "^2.1.1",
     "eslint-plugin-react": "^5.1.1",
     "redux": "^3.6.0",
