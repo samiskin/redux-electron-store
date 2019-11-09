@@ -1,14 +1,44 @@
 {
-  "parser": "babel-eslint",
-  "extends": "airbnb",
-  "rules": {
-    "comma-dangle": 0,
-    "func-names": 0,
-    "guard-for-in": 0,
-    "prefer-const": 0,
-    "strict": 0,
-    "no-else-return": 0,
-    "no-use-before-define": 0,
-    "no-unused-expressions": 0
-  }
+	"extends": "airbnb-typescript",
+	"plugins": [
+		"@typescript-eslint"
+	],
+	"parser": "@typescript-eslint/parser",
+	"parserOptions": {
+		"sourceType": "module",
+		"ecmaVersion": 2019
+	},
+	"rules": {
+		"comma-dangle": [
+			"error",
+			{
+				"arrays": "always-multiline",
+				"objects": "always-multiline",
+				"imports": "always-multiline",
+				"exports": "always-multiline",
+				"functions": "always-multiline"
+			}
+		],
+		"func-names": 0,
+		"guard-for-in": 0,
+		"prefer-const": 0,
+		"strict": 0,
+		"no-else-return": 0,
+		"no-use-before-define": 0,
+		"no-unused-expressions": 0
+	},
+	"settings": {
+		"import/parsers": {
+			"@typescript-eslint/parser": [
+				".ts"
+			]
+		},
+		"import/resolver": {
+			// use <root>/tsconfig.json
+			"typescript": {
+				"alwaysTryTypes": true, // always try to resolve types under `<roo/>@types` directory even it doesn't contain any source code, like `@types/unist`,
+				"directory": "./tsconfig.json"
+			}
+		}
+	}
 }

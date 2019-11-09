@@ -1,0 +1,19 @@
+  
+{
+    "compilerOptions": {
+      // Generate typings files
+      "declaration": true,
+      // Target ES5
+      "target": "es5",
+      // Search under node_modules for non-relative imports.
+      "moduleResolution": "node",
+      "noEmit": true,
+      "noUnusedLocals": true,
+      "noImplicitAny": true,
+      // Enable strictest settings like strictNullChecks & noImplicitAny.
+      "strict": true,
+      // Import non-ES modules as default imports.
+      "esModuleInterop": true
+    },
+    "include": ["src"]
+  }

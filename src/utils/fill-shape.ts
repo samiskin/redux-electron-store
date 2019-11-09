@@ -24,10 +24,9 @@
     }
   }
 */
+import keys from "lodash/keys";
 
-const keys = require('lodash/keys');
-
-module.exports = function fillShape(source, sink) {
+export function fillShape(source: any, sink?: any | boolean) {
   if (typeof sink === 'function') {
     sink = sink(source); //eslint-disable-line
   }
@@ -38,7 +37,7 @@ module.exports = function fillShape(source, sink) {
     return undefined;
   }
 
-  let filledObject = {};
+  let filledObject: any = {};
   keys(sink).forEach((key) => {
     if (source[key] === undefined) {
       return;

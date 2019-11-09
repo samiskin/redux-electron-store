@@ -8,15 +8,25 @@
     {updated: {b: 2}, deleted: {a: true}}
 */
 
-const isObject = require('lodash/isObject');
-const isEmpty = require('lodash/isEmpty');
-const keys = require('lodash/keys');
+import isObject from 'lodash/isObject';
+import isEmpty from 'lodash/isEmpty';
+import keys from 'lodash/keys';
 
-const isShallow = val => Array.isArray(val) || !isObject(val);
+export interface UpdatedObjects {
+  [key: string]: UpdatedObjects | object;
+}
 
-module.exports = function objectDifference(old, curr) {
-  const updated = {};
-  const deleted = {};
+export interface DeletedObjects {
+  [key: string]: DeletedObjects | boolean;
+}
+
+export const isShallow = (val: any) => Array.isArray(val) || !isObject(val);
+
+type Obj = { [key: string]: any };
+
+export function objectDifference(old: Obj, curr: Obj) {
+  const updated: UpdatedObjects = {};
+  const deleted: DeletedObjects = {};
 
   keys(curr).forEach(key => {
     if (old[key] === curr[key]) return;

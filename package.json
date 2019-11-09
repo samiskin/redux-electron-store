@@ -1,9 +1,17 @@
 {
   "name": "redux-electron-store",
-  "version": "0.6.5",
+  "version": "0.7.5",
   "description": "Redux store which synchronizes between instances in multiple process",
-  "main": "src/index.js",
+  "main": "lib/redux-electron-store.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "lib",
+    "es",
+    "src"
+  ],
   "scripts": {
+    "build": "rollup -c",
     "lint": "eslint src/"
   },
   "repository": {
@@ -25,14 +33,22 @@
   },
   "homepage": "https://github.com/samiskin/redux-electron-store#readme",
   "dependencies": {
-    "lodash": "^4.13.1"
+    "lodash": "^4.17.15"
   },
   "devDependencies": {
-    "electron": "^4.0.0",
-    "eslint": "^1.10.3",
-    "eslint-config-airbnb": "^2.1.1",
-    "eslint-plugin-react": "^5.1.1",
-    "redux": "^3.6.0",
-    "tape": "^4.2.2"
+    "@types/lodash": "^4.14.146",
+    "@typescript-eslint/eslint-plugin": "^2.6.1",
+    "@typescript-eslint/parser": "^2.6.1",
+    "babel-eslint": "^10.0.3",
+    "electron": "^7.0.0",
+    "eslint": "^6.6.0",
+    "eslint-config-airbnb": "^18.0.1",
+    "eslint-config-airbnb-typescript": "^6.0.0",
+    "redux": "^4.0.4",
+    "rollup": "^1.26.3",
+    "rollup-plugin-typescript2": "^0.25.2",
+    "tape": "^4.2.2",
+    "tslib": "^1.9.3",
+    "typescript": "^3.1.6"
   }
 }
