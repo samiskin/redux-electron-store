@@ -37,10 +37,10 @@ module.exports = overrides => storeCreator => (reducer, initialState) => {
     clients[webContentsId] = { active: false };
   };
 
-  ipcMain.on(`${globalName}-register-renderer`, ({ sender }, { filter, clientId }) => {
+  ipcMain.on(`${globalName}-register-renderer`, ({ sender }, { filter, clientId, isGuest }) => {
     let webContentsId = sender.id;
     
-    if (!sender.isGuest()) { // For windowMap (not webviews)
+    if (!isGuest) { // For windowMap (not webviews)
       let browserWindow = sender.getOwnerBrowserWindow();
       if (windowMap[browserWindow.id] !== undefined) { // Occurs on window reload
         unregisterRenderer(windowMap[browserWindow.id]);

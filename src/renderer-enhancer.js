@@ -33,12 +33,12 @@ const defaultParams = {
 };
 module.exports = overrides => storeCreator => (reducer, providedInitialState) => {
   const params = Object.assign({}, defaultParams, overrides);
-
   const rendererId = process.guestInstanceId || remote.getCurrentWindow().id;
   const clientId = process.guestInstanceId ? `webview ${rendererId}` : `window ${rendererId}`;
 
+  const isGuest = !!process.guestInstanceId;
   // Allows the main process to forward updates to this renderer automatically
-  ipcRenderer.send(`${globalName}-register-renderer`, { filter: params.filter, clientId });
+  ipcRenderer.send(`${globalName}-register-renderer`, { filter: params.filter, clientId, isGuest });
 
   // Get current from the electronEnhanced store in the browser through the global it creates
   let getInitialState = remote.getGlobal(globalName);
