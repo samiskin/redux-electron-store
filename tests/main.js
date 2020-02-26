@@ -1,53 +1,81 @@
-const {app, ipcMain, BrowserWindow} = require('electron');
-const url = require('url');
-const path = require('path');
+const { app, ipcMain, BrowserWindow } = require("electron");
+const url = require("url");
+const path = require("path");
 
-const store = require('./store');
+const store = require("./store");
 
-app.on('ready', () => {
+// Keep a global reference of the window object, if you don't, the window will
+// be closed automatically when the JavaScript object is garbage collected.
+let mainWindow;
 
-  const screen = require('electron').screen;
-
-  const loadFileUrl = (wnd, params = {}) => {
-    let targetUrl = url.format({
-      protocol: 'file',
-      pathname: require.resolve('./index.html'),
-      slashes: true,
-      query: {windowParams: JSON.stringify(params)}
-    });
-
-    wnd.loadURL(targetUrl);
-  }
-
-
-  const numWindows = 3;
-  const windowSize = {width: 500, height: 500};
-  const screenSize = screen.getPrimaryDisplay().size;
-  const padding = 10;
-
-  const top = 0.5 * screenSize.height - windowSize.height;
-  const left = 0.5 * (screenSize.width - (numWindows * (padding + windowSize.width) - padding));
+function createWindow() {
   // Create the browser window.
-  const windows = Array(numWindows).fill().map((_, index) => {
-    const win = new BrowserWindow({
-      width: windowSize.width,
-      height: windowSize.height,
-      x: left + (windowSize.width + padding) * index,
-      y: top,
-      show: true,
-    });
-    loadFileUrl(win, {id: index});
-    return win;
+  mainWindow = new BrowserWindow({
+    width: 800,
+    height: 600,
+    webPreferences: {
+      nodeIntegration: true
+    }
   });
 
-  (function interval() {
-    store.dispatch({type: 'INCREMENT', payload: 1});
-    setTimeout(interval, 2000);
-  })();
+  // and load the index.html of the app.
+  mainWindow.loadURL(
+    url.format({
+      pathname: path.join(__dirname, "index.html"),
+      protocol: "file:",
+      slashes: true
+    })
+  );
+
+  // Open the DevTools.
+  // mainWindow.webContents.openDevTools()
+
+  // Emitted when the window is closed.
+  mainWindow.on("closed", () => {
+    // Dereference the window object, usually you would store windows
+    // in an array if your app supports multi windows, this is the time
+    // when you should delete the corresponding element.
+    mainWindow = null;
+  });
+
+  function updateTitle() {
+    mainWindow.setTitle(store.getState().count.toString());
+  }
+
+  updateTitle();
+
+  store.subscribe(updateTitle);
+
+  registerIpcListeners(store);
+}
+
+// This method will be called when Electron has finished
+// initialization and is ready to create browser windows.
+// Some APIs can only be used after this event occurs.
+app.on("ready", createWindow);
+
+// Quit when all windows are closed.
+app.on("window-all-closed", () => {
+  // On OS X it is common for applications and their menu bar
+  // to stay active until the user quits explicitly with Cmd + Q
+  if (process.platform !== "darwin") {
+    app.quit();
+  }
 });
 
-
-
+app.on("activate", () => {
+  // On OS X it's common to re-create a window in the app when the
+  // dock icon is clicked and there are no other windows open.
+  if (mainWindow === null) {
+    createWindow();
+  }
+});
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
+
+function registerIpcListeners(store) {
+  ipcMain.on("action", (event, action) => {
+    store.dispatch(action);
+  });
+}

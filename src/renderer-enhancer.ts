@@ -28,19 +28,12 @@ import { Options, ElectronEnhancer } from "./types";
  *                                    determining whether to forward the action to other processes
  *                                    or not
  */
-const defaultParams = {
-  filter: true,
-  excludeUnfilteredState: false,
-  postDispatchCallback: () => null,
-  preDispatchCallback: () => null,
-  dispatchProxy: null,
-  actionFilter: () => true
-};
-export const renderEnhancer: ElectronEnhancer = (overrides?: Options) => (
+export const renderEnhancer: ElectronEnhancer = (params: Options = {}) => (
   storeCreator: StoreCreator
 ): StoreEnhancerStoreCreator => {
   return (reducer, providedInitialState) => {
-    const params = Object.assign({}, defaultParams, overrides);
+
+    const filter = params.filter != null ? params.filter  : true;
 
     const rendererId = process.guestInstanceId || remote.getCurrentWindow().id;
     const clientId = process.guestInstanceId
@@ -51,7 +44,7 @@ export const renderEnhancer: ElectronEnhancer = (overrides?: Options) => (
 
     // Allows the main process to forward updates to this renderer automatically
     ipcRenderer.send(Message.RegisterRenderer, {
-      filter: params.filter,
+      filter,
       clientId,
       isGuest
     });
@@ -61,7 +54,7 @@ export const renderEnhancer: ElectronEnhancer = (overrides?: Options) => (
 
     const storeData = JSON.parse(getInitialState());
     const preload = params.excludeUnfilteredState
-      ? fillShape(storeData, params.filter)
+      ? fillShape(storeData, filter)
       : storeData;
     const initialState = objectMerge(preload, providedInitialState || {});
 
@@ -89,7 +82,7 @@ export const renderEnhancer: ElectronEnhancer = (overrides?: Options) => (
     const store = setupElectronStore(context);
 
     // Dispatches from other processes are forwarded using this ipc message
-    const dispatcher = context.params.dispatchProxy || store.dispatch;
+    const dispatcher = params.dispatchProxy || store.dispatch;
     ipcRenderer.on(Message.BrowserDispatch, (event, stringifiedAction) => {
       context.flags.isUpdating = true;
       const action = JSON.parse(stringifiedAction);

@@ -28,6 +28,7 @@ import keys from "lodash/keys";
 
 export function fillShape(source: any, sink?: any | boolean) {
   if (typeof sink === 'function') {
+    console.warn("source", source, sink)
     sink = sink(source); //eslint-disable-line
   }
 

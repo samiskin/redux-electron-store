@@ -2,17 +2,14 @@
 <html>
   <head>
     <meta charset="UTF-8">
-    <title>Hello World!</title>
   </head>
   <body>
-    <h1>Hello World!</h1>
-    <!-- All of the Node.js APIs are available in this renderer process. -->
-    <webview nodeintegration id="webview" src="http://www.example.com/" style="display:inline-flex; width:300; height:300"></webview>
-  </body>
+    <h1>Hello world!</h1>
 
-  <script>
-    const url = require('url');
-    window.rendererId = process.guestInstanceId || JSON.parse(url.parse(window.location.href, true).query.windowParams).id;
-    require('./renderer.js')
-  </script>
+      <span id="value"></span>
+
+    <script type="text/javascript">
+      require('./renderer.js');
+    </script>
+  </body>
 </html>

@@ -9,16 +9,10 @@ import {
 import { ElectronEnhancer, Options } from "./types";
 import { fillShape } from "./utils/fill-shape";
 
-export const defaultParams = {
-  postDispatchCallback: (action: AnyAction) => null,
-  preDispatchCallback: (action: AnyAction) => null,
-  actionFilter: () => true
-};
-
 interface Client {
   active: boolean;
   webContents?: Electron.WebContents;
-  filter?: any;
+  filter?: Options["filter"];
   clientId?: string;
   windowId?: number;
 }
@@ -35,11 +29,10 @@ type WindowMap = {
  * Creates a store enhancer which allows a redux store to synchronize its data
  * with an electronEnhanced store in the browser process.
  */
-export const mainEnhancer: ElectronEnhancer = (overrides?: Options) => (
+export const mainEnhancer: ElectronEnhancer = (params: Options = {}) => (
   storeCreator: StoreCreator
 ): StoreEnhancerStoreCreator => {
   return (reducer, initialState) => {
-    const params = Object.assign({}, defaultParams, overrides);
     let clients: Clients = {}; // webContentsId -> {webContents, filter, clientId, windowId, active}
     // Need to keep track of windows, as when a window refreshes it creates a new
     // webContents, and the old one must be unregistered
@@ -56,9 +49,13 @@ export const mainEnhancer: ElectronEnhancer = (overrides?: Options) => (
         let webContentsId = sender.id;
         let browserWindow = BrowserWindow.fromWebContents(sender);
 
+        if (!browserWindow) {
+          return;
+        }
+
         if (!isGuest) {
           // For windowMap (not webviews)
-          if (windowMap[browserWindow.id] !== undefined) {
+          if (windowMap[browserWindow.id] != null) {
             // Occurs on window reload
             unregisterRenderer(windowMap[browserWindow.id]);
           }
@@ -66,6 +63,7 @@ export const mainEnhancer: ElectronEnhancer = (overrides?: Options) => (
           // Webcontents aren't automatically destroyed on window close
           browserWindow.on("closed", () => unregisterRenderer(webContentsId));
         }
+
         // Update clients after the unregisterRenderer method call(webContentsId should not be removed
         // after the window refresh).
         clients[webContentsId] = {

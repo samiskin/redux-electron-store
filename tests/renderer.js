@@ -1,25 +1,16 @@
-// This file is required by the index.html file and will
-// be executed in the renderer process for that window.
-// All of the Node.js APIs are available in this process.
+const store = require("./store");
+const { ipcRenderer } = require("electron");
 
-const { ipcRenderer } = require('electron');
+ipcRenderer.on("action", (event, action) => {
+  store.dispatch(action);
+});
 
-const store = require('./store');
+const valueEl = document.getElementById("value");
 
-const button = document.createElement('button');
-button.textContent = 'INCREMENT';
-button.onclick = () => store.dispatch({type: 'INCREMENT', payload: 2});
-
-document.body.appendChild(document.createElement('br'));
-document.body.appendChild(document.createElement('br'));
-document.body.appendChild(button);
-
-store.subscribe(() => button.textContent = `INCREMENT ${store.getState().count}`);
-
-if (!process.guestInstanceId) {
-  const webview = document.getElementById('webview');
-  webview.addEventListener('dom-ready', function listener() {
-    webview.loadURL(`file://${__dirname + '/index.html'}`);
-    webview.removeEventListener('dom-ready', listener);
-  });
+function render() {
+  valueEl.innerHTML = JSON.stringify(store.getState());
 }
+
+render();
+
+store.subscribe(render);
