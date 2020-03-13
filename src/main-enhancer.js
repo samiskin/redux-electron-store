@@ -39,8 +39,21 @@ module.exports = overrides => storeCreator => (reducer, initialState) => {
 
   ipcMain.on(
     `${globalName}-register-renderer`,
-    ({ sender }, { filter, clientId }) => {
+    ({ sender }, { filter, clientId, isGuest }) => {
       let webContentsId = sender.id
+
+      if (!isGuest) {
+        // For windowMap (not webviews)
+        let browserWindow = sender.getOwnerBrowserWindow()
+        if (windowMap[browserWindow.id] !== undefined) {
+          // Occurs on window reload
+          unregisterRenderer(windowMap[browserWindow.id])
+        }
+        windowMap[browserWindow.id] = webContentsId
+
+        // Webcontents aren't automatically destroyed on window close
+        browserWindow.on('closed', () => unregisterRenderer(webContentsId))
+      }
 
       // if webviews are reloaded, the contents id changes
       // so duplicates need to be removed
@@ -56,19 +69,6 @@ module.exports = overrides => storeCreator => (reducer, initialState) => {
         clientId: webContentsId,
         //windowId: sender.getOwnerBrowserWindow().id,
         active: true
-      }
-
-      if (!sender.isGuest()) {
-        // For windowMap (not webviews)
-        let browserWindow = sender.getOwnerBrowserWindow()
-        if (windowMap[browserWindow.id] !== undefined) {
-          // Occurs on window reload
-          unregisterRenderer(windowMap[browserWindow.id])
-        }
-        windowMap[browserWindow.id] = webContentsId
-
-        // Webcontents aren't automatically destroyed on window close
-        browserWindow.on('closed', () => unregisterRenderer(webContentsId))
       }
     }
   )
