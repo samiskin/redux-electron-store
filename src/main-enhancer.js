@@ -45,11 +45,20 @@ module.exports = overrides => storeCreator => (reducer, initialState) => {
       if (!isGuest) {
         // For windowMap (not webviews)
         let browserWindow = sender.getOwnerBrowserWindow()
-        if (windowMap[browserWindow.id] !== undefined) {
-          // Occurs on window reload
-          unregisterRenderer(windowMap[browserWindow.id])
+        let browserView = BrowserView.fromWebContents(sender)
+
+        if (browserView) {
+          if (viewMap[browserView.id]) {
+            unregisterRenderer(windowMap[browserWindow.id])
+          }
+          viewMap[browserView.id] = webContentsId
+        } else {
+          if (windowMap[browserWindow.id]) {
+            // Occurs on window reload            
+            unregisterRenderer(windowMap[browserWindow.id])
+          }
+          windowMap[browserWindow.id] = webContentsId
         }
-        windowMap[browserWindow.id] = webContentsId
 
         // Webcontents aren't automatically destroyed on window close
         browserWindow.on('closed', () => unregisterRenderer(webContentsId))
