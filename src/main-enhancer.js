@@ -30,6 +30,7 @@ module.exports = overrides => storeCreator => (reducer, initialState) => {
   // Need to keep track of windows, as when a window refreshes it creates a new
   // webContents, and the old one must be unregistered
   let windowMap = {} // windowId -> webContentsId
+  let viewMap = {}
 
   // Cannot delete data, as events could still be sent after close
   // events when a BrowserWindow is created using remote
