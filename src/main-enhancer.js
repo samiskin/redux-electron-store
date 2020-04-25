@@ -1,5 +1,5 @@
 // {params, flags, storeCreator, reducer, initialState, forwarder}
-const { ipcMain } = require('electron')
+const { ipcMain, BrowserView } = require('electron')
 const { globalName } = require('./constants')
 const fillShape = require('./utils/fill-shape')
 const setupStore = require('./setup-electron-store')
