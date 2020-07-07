@@ -28,7 +28,7 @@
     "lodash": "^4.13.1"
   },
   "devDependencies": {
-    "electron": "^4.0.0",
+    "electron": "^9.1.0",
     "eslint": "^1.10.3",
     "eslint-config-airbnb": "^2.1.1",
     "eslint-plugin-react": "^5.1.1",
